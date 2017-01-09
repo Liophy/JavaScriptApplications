@@ -119,7 +119,11 @@ function startApp() {
         let userData = {
             username: $("#registerUsername").val(),
             password: $("#registerPasswd").val(),
-            name: $("#registerName").val()
+            name: $("#registerName").val(),
+            playerstats: {
+                points: Number(0),
+                rank: Number(1000)
+            }
         };
 
         $.ajax({
@@ -191,52 +195,64 @@ function startApp() {
     function listAllMatches() {
         showView('viewAllMatches');
 
-
         $.ajax({
             method: "GET",
-            url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/products",
+            url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches",
             headers: getKinveyUserAuthHeaders(),
-            success: loadProductsSuccess,
+            success: loadMatchesSuccess,
             error: handleAjaxError
         });
 
-        function loadProductsSuccess(products) {
+        function loadMatchesSuccess(matches) {
 
-            $('#shopProducts').empty();
+            $('#listAllMatches').empty();
             showInfo('Matches loaded.');
 
-            if (products.length == 0) {
-                $('#shopProducts').text('Няма мачове.');
+            if (matches.length == 0) {
+                $('#listAllMatches').text('Няма мачове.');
             }
 
             else {
-                let productTable = $('<table>')
+                let matchTable = $('<table>')
                     .append($('<tr>').append(
-                        '<th>Product</th><th>Description</th>',
-                        '<th>Price</th>,<th>Actions</th>'));
-                for (let item of products) {
-                    appendShopItemRow(item, productTable);
+                        '<th>N</th>'+
+                        '<th>Отбор 1</th>'+
+                        '<th></th>'+
+                        '<th></th>'+
+                        '<th>Отбор 2</th>'+
+                        '<th>Дата</th>'
+                    ));
+                let count = 1;
+                for (let match of matches) {
+                    appendMatchRow(match, matchTable);
                 }
 
-                $('#shopProducts').append(productTable);
+                $('#listAllMatches').append(matchTable);
+
+                function appendMatchRow(match, matchTable) {
+
+                    let matchLink = $('<a href="#">[Edit]</a>').click(editMatch.bind(this, match));
+
+                    matchTable.append($('<tr>').append(
+                        $('<td>').text(count),
+                        $('<td>').text(match.team1.name),
+                        $('<td>').text(match.team1.result),
+                        $('<td>').text(match.team2.result),
+                        $('<td>').text(match.team2.name),
+                        $('<td>').text(match.date),
+                        $('<td>').append(matchLink)
+                    ));
+                    count++
+                }
             }
         }
 
-        function appendShopItemRow(item, productTable) {
 
-            let purchaseLink = $('<a href="#">[Purchase]</a>').click(purchaseItem.bind(this, item));
-
-            productTable.append($('<tr>').append(
-                $('<td>').text(item.name),
-                $('<td>').text(item.description),
-                $('<td>').text(item.price),
-                $('<td>').append(purchaseLink)
-            ));
-        }
     }
 
     function listAllPlayers() {
         showView('viewAllPlayers');
+        calculateRank();
 
         $.ajax({
             method: "GET",
@@ -327,6 +343,10 @@ function startApp() {
 
     }
 
+    function editMatch(match) {
+
+    }
+
     function addNewMatchView() {
         $('#formAddNewMatch').trigger('reset');
         autocomplete();
@@ -340,22 +360,26 @@ function startApp() {
             "team1": {
                 "name": $("#teamOneName").val(),
                 "result": $("#teamOneResult").val(),
-                "player1": $("#teamOnePlayerOne").val(),
-                "player2": $("#teamOnePlayerTwo").val(),
-                "player3": $("#teamOnePlayerThree").val(),
-                "player4": $("#teamOnePlayerFour").val(),
-                "player5": $("#teamOnePlayerFive").val(),
-                "player6": $("#teamOnePlayerSix").val(),
+                "player1": {
+                    "_id": $("#teamOnePlayerOne").find(":selected").data("value")._id,
+                    "username": $("#teamOnePlayerOne").find(":selected").data("value").username,
+                    "playerstats": $("#teamOnePlayerOne").find(":selected").data("value").playerstats
+                },
+                "player2": $("#teamOnePlayerTwo").find(":selected").data("value"),
+                "player3": $("#teamOnePlayerThree").find(":selected").data("value"),
+                "player4": $("#teamOnePlayerFour").find(":selected").data("value"),
+                "player5": $("#teamOnePlayerFive").find(":selected").data("value"),
+                "player6": $("#teamOnePlayerSix").find(":selected").data("value")
             },
             "team2": {
                 "name": $("#teamTwoName").val(),
                 "result": $("#teamTwoResult").val(),
-                "player1": $("#teamTwoPlayerOne").val(),
-                "player2": $("#teamTwoPlayerTwo").val(),
-                "player3": $("#teamTwoPlayerThree").val(),
-                "player4": $("#teamTwoPlayerFour").val(),
-                "player5": $("#teamTwoPlayerFive").val(),
-                "player6": $("#teamTwoPlayerSix").val()
+                "player1": $("#teamTwoPlayerOne").find(":selected").data("value"),
+                "player2": $("#teamTwoPlayerTwo").find(":selected").data("value"),
+                "player3": $("#teamTwoPlayerThree").find(":selected").data("value"),
+                "player4": $("#teamTwoPlayerFour").find(":selected").data("value"),
+                "player5": $("#teamTwoPlayerFive").find(":selected").data("value"),
+                "player6": $("#teamTwoPlayerSix").find(":selected").data("value")
             }
         };
 
@@ -367,7 +391,12 @@ function startApp() {
             success: addMatchSuccess,
             error: handleAjaxError
         });
-        function addMatchSuccess() {
+
+
+        function addMatchSuccess(response) {
+
+
+
             showHomeViewUser();
             showInfo('Мачът е добавен успешно.');
         }
@@ -378,6 +407,33 @@ function startApp() {
 
         $('#formAddNewPlayer').trigger('reset');
         showView('viewAddPlayer');
+
+    }
+
+    function addNewPlayer(){
+
+        let userData = {
+            username: $("#addNewPlayerUsername").val(),
+            playerstats: {
+                points: Number(1),
+                rank: Number(1000)
+            }
+        };
+
+        $.ajax({
+            method: "POST",
+            url: kinveyBaseUrl + "user/" + kinveyAppKey + "/",
+            headers: kinveyAppAuthHeaders,
+            data: userData,
+            success: registerSuccess,
+            error: handleAjaxError
+        });
+        function registerSuccess(response) {
+            console.log(typeof response.matches )
+            $('#formAddNewPlayer').trigger('reset');
+            showView('viewAddPlayer');
+            showInfo('Успешна регистрация.');
+        }
 
     }
 
@@ -397,39 +453,13 @@ function startApp() {
                     $('<option>')
                         .text(user.username)
                         .val(user._id)
+                        .data("value", user)
                 );
             }
         }
     }
 
-    function addNewPlayer(event){
-        event.preventDefault();
-
-        let userData = {
-            username: $("#addNewPlayerUsername").val(),
-            playerstats: {
-                points: Number(0),
-                rang: Number(1000)
-            }
-        };
-
-        $.ajax({
-            method: "POST",
-            url: kinveyBaseUrl + "user/" + kinveyAppKey + "/",
-            headers: kinveyAppAuthHeaders,
-            data: userData,
-            success: registerSuccess,
-            error: handleAjaxError
-        });
-        function registerSuccess() {
-            $('#formAddNewPlayer').trigger('reset');
-            showView('viewAddPlayer');
-            showInfo('Успешна регистрация.');
-        }
-
-    }
-
-    function calculateRang(){
+    function calculateRank(){
 
         $.ajax({
             method: "GET",
@@ -441,8 +471,48 @@ function startApp() {
         function getMatchesSuccess(matches) {
 
 
-            if (players[0]._kmd.lmt<players[1]._kmd.lmt)
-                console.log("liophy is before 1")
+            function sortMatches(matches){
+                matches.sort((a,b) => a._kmd.lmt < b._kmd.lmt)
+            }
+            function calculateMatch(match){
+                let team1rank = Number(match.team1.player1.playerstats.rank)+
+                                Number(match.team1.player2.playerstats.rank)+
+                                Number(match.team1.player3.playerstats.rank)+
+                                Number(match.team1.player4.playerstats.rank)+
+                                Number(match.team1.player5.playerstats.rank)+
+                                Number(match.team1.player6.playerstats.rank);
+
+                let team2rank = Number(match.team2.player1.playerstats.rank)+
+                                Number(match.team2.player2.playerstats.rank)+
+                                Number(match.team2.player3.playerstats.rank)+
+                                Number(match.team2.player4.playerstats.rank)+
+                                Number(match.team2.player5.playerstats.rank)+
+                                Number(match.team2.player6.playerstats.rank);
+
+                let coefficient = Number(1)+ Math.abs((team1rank-team2rank)/100);
+
+                let goals = Math.abs(match.team1.result - match.team2.result);
+                if (goals > 5) {
+                    goals = 5
+                }
+
+                let pointsforwin = 10 + goals;
+                let pointsforloss = -10 - goals;
+
+
+
+
+
+                console.log(match.team1.result)
+
+
+
+            }
+
+            for( let i = 0; i < matches.length; i++ ){
+                calculateMatch(matches[i])
+            }
+
 
         }
 
