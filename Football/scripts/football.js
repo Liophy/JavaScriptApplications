@@ -288,12 +288,13 @@ function startApp() {
 
                 function appendPlayerRow(player, playersTable) {
 
+
                     let editLink = $('<a href="#">[Edit]</a>').click(editPlayer.bind(this, player));
 
                     playersTable.append($('<tr>').append(
                         $('<td>').text(count),
                         $('<td>').text(player.username),
-                        $('<td>').text(""),
+                        $('<td>').text(player.playerstats.rank),
                         $('<td>').text(""),
                         $('<td>').text(""),
                         $('<td>').text(""),
@@ -349,8 +350,9 @@ function startApp() {
 
     function addNewMatchView() {
         $('#formAddNewMatch').trigger('reset');
-        autocomplete();
         showView('viewAddMatch');
+        loadPlayersInSelect();
+        autocomplete();
     }
 
     function addNewMatch() {
@@ -365,21 +367,65 @@ function startApp() {
                     "username": $("#teamOnePlayerOne").find(":selected").data("value").username,
                     "playerstats": $("#teamOnePlayerOne").find(":selected").data("value").playerstats
                 },
-                "player2": $("#teamOnePlayerTwo").find(":selected").data("value"),
-                "player3": $("#teamOnePlayerThree").find(":selected").data("value"),
-                "player4": $("#teamOnePlayerFour").find(":selected").data("value"),
-                "player5": $("#teamOnePlayerFive").find(":selected").data("value"),
-                "player6": $("#teamOnePlayerSix").find(":selected").data("value")
+                "player2": {
+                    "_id": $("#teamOnePlayerTwo").find(":selected").data("value")._id,
+                    "username": $("#teamOnePlayerTwo").find(":selected").data("value").username,
+                    "playerstats": $("#teamOnePlayerTwo").find(":selected").data("value").playerstats
+                },
+                "player3": {
+                    "_id": $("#teamOnePlayerThree").find(":selected").data("value")._id,
+                    "username": $("#teamOnePlayerThree").find(":selected").data("value").username,
+                    "playerstats": $("#teamOnePlayerThree").find(":selected").data("value").playerstats
+                },
+                "player4": {
+                    "_id": $("#teamOnePlayerFour").find(":selected").data("value")._id,
+                    "username": $("#teamOnePlayerFour").find(":selected").data("value").username,
+                    "playerstats": $("#teamOnePlayerFour").find(":selected").data("value").playerstats
+                },
+                "player5": {
+                    "_id": $("#teamOnePlayerFive").find(":selected").data("value")._id,
+                    "username": $("#teamOnePlayerFive").find(":selected").data("value").username,
+                    "playerstats": $("#teamOnePlayerFive").find(":selected").data("value").playerstats
+                },
+                "player6": {
+                    "_id": $("#teamOnePlayerSix").find(":selected").data("value")._id,
+                    "username": $("#teamOnePlayerSix").find(":selected").data("value").username,
+                    "playerstats": $("#teamOnePlayerSix").find(":selected").data("value").playerstats
+                }
             },
             "team2": {
                 "name": $("#teamTwoName").val(),
                 "result": $("#teamTwoResult").val(),
-                "player1": $("#teamTwoPlayerOne").find(":selected").data("value"),
-                "player2": $("#teamTwoPlayerTwo").find(":selected").data("value"),
-                "player3": $("#teamTwoPlayerThree").find(":selected").data("value"),
-                "player4": $("#teamTwoPlayerFour").find(":selected").data("value"),
-                "player5": $("#teamTwoPlayerFive").find(":selected").data("value"),
-                "player6": $("#teamTwoPlayerSix").find(":selected").data("value")
+                "player1": {
+                    "_id": $("#teamTwoPlayerOne").find(":selected").data("value")._id,
+                    "username": $("#teamTwoPlayerOne").find(":selected").data("value").username,
+                    "playerstats": $("#teamTwoPlayerOne").find(":selected").data("value").playerstats
+                },
+                "player2": {
+                    "_id": $("#teamTwoPlayerTwo").find(":selected").data("value")._id,
+                    "username": $("#teamTwoPlayerTwo").find(":selected").data("value").username,
+                    "playerstats": $("#teamTwoPlayerTwo").find(":selected").data("value").playerstats
+                },
+                "player3": {
+                    "_id": $("#teamTwoPlayerThree").find(":selected").data("value")._id,
+                    "username": $("#teamTwoPlayerThree").find(":selected").data("value").username,
+                    "playerstats": $("#teamTwoPlayerThree").find(":selected").data("value").playerstats
+                },
+                "player4": {
+                    "_id": $("#teamTwoPlayerFour").find(":selected").data("value")._id,
+                    "username": $("#teamTwoPlayerFour").find(":selected").data("value").username,
+                    "playerstats": $("#teamTwoPlayerFour").find(":selected").data("value").playerstats
+                },
+                "player5": {
+                    "_id": $("#teamTwoPlayerFive").find(":selected").data("value")._id,
+                    "username": $("#teamTwoPlayerFive").find(":selected").data("value").username,
+                    "playerstats": $("#teamTwoPlayerFive").find(":selected").data("value").playerstats
+                },
+                "player6": {
+                    "_id": $("#teamTwoPlayerSix").find(":selected").data("value")._id,
+                    "username": $("#teamTwoPlayerSix").find(":selected").data("value").username,
+                    "playerstats": $("#teamTwoPlayerSix").find(":selected").data("value").playerstats
+                }
             }
         };
 
@@ -394,9 +440,7 @@ function startApp() {
 
 
         function addMatchSuccess(response) {
-
-
-
+            calculateMatch(response);
             showHomeViewUser();
             showInfo('Мачът е добавен успешно.');
         }
@@ -407,7 +451,6 @@ function startApp() {
 
         $('#formAddNewPlayer').trigger('reset');
         showView('viewAddPlayer');
-
     }
 
     function addNewPlayer(){
@@ -417,6 +460,17 @@ function startApp() {
             playerstats: {
                 points: Number(1),
                 rank: Number(1000)
+            },
+            _acl:             {
+                "creator": "user_id_1",
+                "gr": true,
+                "gw": false,
+                "r": ["5874dc61ef097e580fd27fce"],
+                "w": ["5874dc61ef097e580fd27fce"],
+                "groups": {
+                    "r": ["group_id_1", "group_id_5"],
+                    "w": ["group_id_3", "group_id_4"]
+                }
             }
         };
 
@@ -428,16 +482,15 @@ function startApp() {
             success: registerSuccess,
             error: handleAjaxError
         });
-        function registerSuccess(response) {
-            console.log(typeof response.matches )
+        function registerSuccess() {
             $('#formAddNewPlayer').trigger('reset');
             showView('viewAddPlayer');
             showInfo('Успешна регистрация.');
         }
-
     }
 
     function loadPlayersInSelect(){
+
 
         $.ajax({
             method: "GET",
@@ -449,7 +502,9 @@ function startApp() {
 
         function loadUsersSuccess(users){
             for (let user of users) {
-                $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, #teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).append(
+
+                $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
+                    "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).append(
                     $('<option>')
                         .text(user.username)
                         .val(user._id)
@@ -459,62 +514,117 @@ function startApp() {
         }
     }
 
-    function calculateRank(){
+    function calculateMatch(match){
 
-        $.ajax({
-            method: "GET",
-            url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches",
-            headers: getKinveyUserAuthHeaders(),
-            success: getMatchesSuccess,
-            error: handleAjaxError
-        });
-        function getMatchesSuccess(matches) {
+        let playersForUpdateTeam1 = [];
+        let playersForUpdateTeam2 = [];
 
+        playersForUpdateTeam1.push(match.team1.player1);
+        playersForUpdateTeam1.push(match.team1.player2);
+        playersForUpdateTeam1.push(match.team1.player3);
+        playersForUpdateTeam1.push(match.team1.player4);
+        playersForUpdateTeam1.push(match.team1.player5);
+        playersForUpdateTeam1.push(match.team1.player6);
 
-            function sortMatches(matches){
-                matches.sort((a,b) => a._kmd.lmt < b._kmd.lmt)
+        playersForUpdateTeam2.push(match.team2.player1);
+        playersForUpdateTeam2.push(match.team2.player2);
+        playersForUpdateTeam2.push(match.team2.player3);
+        playersForUpdateTeam2.push(match.team2.player4);
+        playersForUpdateTeam2.push(match.team2.player5);
+        playersForUpdateTeam2.push(match.team2.player6);
+
+        function updatePlayer(){
+            for(let i = 0; i<6; i++){
+                playersForUpdateTeam1[i].playerstats.rank = Number(playersForUpdateTeam1[i].playerstats.rank) + Number(pointsTeamOne);
+                $.ajax({
+                    method: "PUT",
+                    url: kinveyBaseUrl + "user/" + kinveyAppKey +"/"+ playersForUpdateTeam1[i]._id,
+                    headers: getKinveyUserAuthHeaders(),
+                    data: playersForUpdateTeam1[i],
+                    success: console.log("success"),
+                    error: handleAjaxError
+                });
             }
-            function calculateMatch(match){
-                let team1rank = Number(match.team1.player1.playerstats.rank)+
-                                Number(match.team1.player2.playerstats.rank)+
-                                Number(match.team1.player3.playerstats.rank)+
-                                Number(match.team1.player4.playerstats.rank)+
-                                Number(match.team1.player5.playerstats.rank)+
-                                Number(match.team1.player6.playerstats.rank);
-
-                let team2rank = Number(match.team2.player1.playerstats.rank)+
-                                Number(match.team2.player2.playerstats.rank)+
-                                Number(match.team2.player3.playerstats.rank)+
-                                Number(match.team2.player4.playerstats.rank)+
-                                Number(match.team2.player5.playerstats.rank)+
-                                Number(match.team2.player6.playerstats.rank);
-
-                let coefficient = Number(1)+ Math.abs((team1rank-team2rank)/100);
-
-                let goals = Math.abs(match.team1.result - match.team2.result);
-                if (goals > 5) {
-                    goals = 5
-                }
-
-                let pointsforwin = 10 + goals;
-                let pointsforloss = -10 - goals;
-
-
-
-
-
-                console.log(match.team1.result)
-
-
-
+            for(let i = 0; i<6; i++){
+                playersForUpdateTeam2[i].playerstats.rank = Number(playersForUpdateTeam2[i].playerstats.rank) + Number(pointsTeamTwo);
+                $.ajax({
+                    method: "PUT",
+                    url: kinveyBaseUrl + "user/" + kinveyAppKey +"/"+ playersForUpdateTeam2[i]._id,
+                    headers: getKinveyUserAuthHeaders(),
+                    data: playersForUpdateTeam2[i],
+                    success: console.log("success"),
+                    error: handleAjaxError
+                });
             }
+        }
 
-            for( let i = 0; i < matches.length; i++ ){
-                calculateMatch(matches[i])
+        let team1rank = Number(match.team1.player1.playerstats.rank)+
+            Number(match.team1.player2.playerstats.rank)+
+            Number(match.team1.player3.playerstats.rank)+
+            Number(match.team1.player4.playerstats.rank)+
+            Number(match.team1.player5.playerstats.rank)+
+            Number(match.team1.player6.playerstats.rank);
+
+        let team2rank = Number(match.team2.player1.playerstats.rank)+
+            Number(match.team2.player2.playerstats.rank)+
+            Number(match.team2.player3.playerstats.rank)+
+            Number(match.team2.player4.playerstats.rank)+
+            Number(match.team2.player5.playerstats.rank)+
+            Number(match.team2.player6.playerstats.rank);
+
+        let handicap = Math.round((Math.abs(team1rank - team2rank)/50));
+
+        let goalDifference = Math.abs(match.team1.result - match.team2.result);
+        let pointsTeamOne = 0;
+        let pointsTeamTwo = 0;
+
+
+        if(team1rank > team2rank) {
+            if(match.team1.result > (match.team2.result + handicap)){
+
+                pointsTeamOne = 10 + goalDifference - handicap;
+                pointsTeamTwo = - 10 - goalDifference + handicap;
+                updatePlayer();
             }
+            else if((match.team1.result + handicap) < match.team2.result){
 
+                pointsTeamOne = - 10 - goalDifference - handicap;
+                pointsTeamTwo = 10 + goalDifference + handicap;
+                updatePlayer();
+            }
+        }
+        else if(team1rank < team2rank) {
+            if((match.team1.result + handicap) > match.team2.result){
+
+                pointsTeamOne = 10 + goalDifference + handicap;
+                pointsTeamTwo = - 10 - goalDifference - handicap;
+                updatePlayer();
+            }
+            else if((match.team1.result + handicap) < match.team2.result){
+
+                pointsTeamOne = - 10 - goalDifference + handicap;
+                pointsTeamTwo = 10 + goalDifference - handicap;
+                updatePlayer();
+            }
+        }
+        else if(team1rank == team2rank) {
+            if(match.team1.result > match.team2.result){
+
+                pointsTeamOne = 10 + goalDifference;
+                pointsTeamTwo = - 10 - goalDifference;
+                updatePlayer();
+            }
+            else if(match.team1.result < match.team2.result){
+
+                pointsTeamOne = - 10 - goalDifference;
+                pointsTeamTwo = 10 + goalDifference;
+                updatePlayer();
+            }
 
         }
+    }
+
+    function calculateRank(){
 
     }
 
@@ -651,11 +761,44 @@ function startApp() {
                }
            });
 
-           $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, #teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).combobox();
-
-           loadPlayersInSelect();
+           $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
+               "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).combobox();
 
        } );
+    }
+
+    function jQueryAutocomplete(){
+
+        $( function() {
+            var availableTags = [
+                "ActionScript",
+                "AppleScript",
+                "Asp",
+                "BASIC",
+                "C",
+                "C++",
+                "Clojure",
+                "COBOL",
+                "ColdFusion",
+                "Erlang",
+                "Fortran",
+                "Groovy",
+                "Haskell",
+                "Java",
+                "JavaScript",
+                "Lisp",
+                "Perl",
+                "PHP",
+                "Python",
+                "Ruby",
+                "Scala",
+                "Scheme"
+            ];
+            $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
+                "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).autocomplete({
+                source: loadPlayersInSelect()
+            });
+        } );
     }
 
 }
