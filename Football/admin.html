@@ -6,9 +6,15 @@
     <title>Football</title>
     <link rel="stylesheet" type="text/css" href="styles/football.css" />
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="styles/jquery.datetimepicker.min.css"/>
+
     <script src="scripts/jquery-3.1.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="scripts/football.js"></script>
+    <script src="scripts/jquery.datetimepicker.full.js"></script>
+
+
+
 
 </head>
 
@@ -85,21 +91,78 @@
                     <div>Username:</div>
                     <input type="text" name="username" id="addNewPlayerUsername" required />
                 </label>
+
                 <div>
                     <input type="submit" value="Register" />
                 </div>
             </form>
         </section>
 
-
         <section id="viewUserHome">
             <h1 id="viewUserHomeHeading">Welcome, {user}!</h1>
             <a href="#" id="linkUserHomeAddMatch">Добави мач</a>
             <a href="#" id="linkUserHomeAddPlayer">Добави играч</a>
+            <div>
+                <div class="youtube" id="wvfbPtnLL6k" style="width:860px; height: 515px;">
+                </div>
+
+                <div class="youtube" id="SFsFO6FeK6A" style="width:860px; height: 515px;">
+                </div>
+
+                <!-- Include the JavaScript only once -->
+
+                <script>
+
+                // Find all the YouTube video embedded on a page
+                var videos = document.getElementsByClassName("youtube");
+
+                for (var i=0; i<videos.length; i++) {
+
+                var youtube = videos[i];
+
+                // Based on the YouTube ID, we can easily find the thumbnail image
+                var img = document.createElement("img");
+                img.setAttribute("src", "http://i.ytimg.com/vi/"
+                + youtube.id + "/hqdefault.jpg");
+                img.setAttribute("class", "thumb");
+
+
+                // Overlay the Play icon to make it look like a video player
+                var circle = document.createElement("div");
+                circle.setAttribute("class","circle");
+
+                youtube.appendChild(img);
+                youtube.appendChild(circle);
+
+                // Attach an onclick event to the YouTube Thumbnail
+                youtube.onclick = function() {
+
+                // Create an iFrame with autoplay set to true
+                var iframe = document.createElement("iframe");
+                iframe.setAttribute("src",
+                "https://www.youtube.com/embed/" + this.id
+                + "?autoplay=1&autohide=1&border=0&wmode=opaque&enablejsapi=1");
+
+                // The height and width of the iFrame should be the same as parent
+                iframe.style.width  = this.style.width;
+                iframe.style.height = this.style.height;
+
+                // Replace the YouTube thumbnail with YouTube HTML5 Player
+                this.parentNode.replaceChild(iframe, this);
+
+
+                };
+
+                }
+
+                </script>
+
+            </div>
         </section>
 
         <section id="viewAllMatches">
             <h1>Мачове</h1>
+
             <div class="matches" id="listAllMatches">
                 <table>
                     <thead>
@@ -118,7 +181,10 @@
             </div>
         </section>
 
-        <section id="viewSingleMatch"></section>
+        <section id="viewSingleMatch">
+            <div class="singleMatch" id="showSingleMatch">
+            </div>
+        </section>
 
         <section id="viewAddMatch">
             <h1>Добавете нов мач</h1>
@@ -128,19 +194,25 @@
                     <label>Дата</label>
                 </div>
                 <div>
+                    <input type="text" value="" id="datetimepicker"/><br><br>
+                </div>
+                <div>
+                    <input type="text" name="video" id="matchVideo" />
+                    <label >Видео URL</label>
+                </div>
+
+                <div>
                     <input type="text" name="team1" id="teamOneName" required />
-                    <label >Отбор 1</label>
+                    <label >Име Отбор 1</label>
                 </div>
                 <div>
                     <input type="text" name="result" id="teamOneResult" required />
                     <label >Резултат отбор 1</label>
                 </div>
-
                 <div>
                     <select id="teamOnePlayerOne" ></select>
                     <label>Отбор 1, Играч 1</label>
                 </div>
-
                 <div>
                     <select id="teamOnePlayerTwo" ></select>
                     <label class="ui-widget">Отбор 1, Играч 2</label>
@@ -161,10 +233,11 @@
                     <select id="teamOnePlayerSix"></select>
                     <label class="ui-widget">Отбор 1, Играч 6</label>
                 </div>
+                <br><br>
 
                 <div>
                     <input type="text" name="team1" id="teamTwoName" required />
-                    <label>Отбор 2</label>
+                    <label>Име Отбор 2</label>
                 </div>
                 <div>
                     <input type="text" name="result" id="teamTwoResult" required />

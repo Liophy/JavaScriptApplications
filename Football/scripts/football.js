@@ -203,7 +203,17 @@ function startApp() {
             error: handleAjaxError
         });
 
+
+
         function loadMatchesSuccess(matches) {
+
+            function compare(a,b) {
+                a = new Date(a);
+                b = new Date(b);
+                return b-a;
+            }
+
+            matches.sort(compare);
 
             $('#listAllMatches').empty();
             showInfo('Matches loaded.');
@@ -231,16 +241,18 @@ function startApp() {
 
                 function appendMatchRow(match, matchTable) {
 
-                    let matchLink = $('<a href="#">[Edit]</a>').click(editMatch.bind(this, match));
+                    let editMatchLink = $('<a href="#">[Edit]</a>').click(editMatch.bind(this, match));
+                    let showMatchLink = $('<a href="#"></a>').click(showSingleMatch.bind(this, match));
+
 
                     matchTable.append($('<tr>').append(
-                        $('<td>').text(count),
-                        $('<td>').text(match.team1.name),
-                        $('<td>').text(match.team1.result),
-                        $('<td>').text(match.team2.result),
-                        $('<td>').text(match.team2.name),
-                        $('<td>').text(match.date),
-                        $('<td>').append(matchLink)
+                        $('<td>').text(count).click(showSingleMatch.bind(this,match)),
+                        $('<td>').text(match.team1.name).click(showSingleMatch.bind(this,match)),
+                        $('<td>').text(match.team1.result).click(showSingleMatch.bind(this,match)),
+                        $('<td>').text(match.team2.result).click(showSingleMatch.bind(this,match)),
+                        $('<td>').text(match.team2.name).click(showSingleMatch.bind(this,match)),
+                        $('<td>').text(match.date).click(showSingleMatch.bind(this,match)),
+                        $('<td>').append(editMatchLink)
                     ));
                     count++
                 }
@@ -264,6 +276,15 @@ function startApp() {
 
         function loadUsersSuccess(players) {
 
+            function compare(a,b) {
+                if (Number(a.playerstats.rank) < Number(b.playerstats.rank))
+                    return 1;
+                if (Number(a.playerstats.rank) > Number(b.playerstats.rank))
+                    return -1;
+                return 0;
+            }
+            players.sort(compare);
+
             showInfo('Players loaded');
             $('#viewAllPlayers').empty();
 
@@ -272,6 +293,7 @@ function startApp() {
                     '<th>N</th>'+
                     '<th>Име</th>'+
                     '<th>Ранг</th>'+
+                    '<th>Точки</th>'+
                     '<th>Мачове</th>'+
                     '<th>Победи</th>'+
                     '<th>Равни</th>'+
@@ -295,10 +317,11 @@ function startApp() {
                         $('<td>').text(count),
                         $('<td>').text(player.username),
                         $('<td>').text(player.playerstats.rank),
-                        $('<td>').text(""),
-                        $('<td>').text(""),
-                        $('<td>').text(""),
-                        $('<td>').text(""),
+                        $('<td>').text(player.playerstats.points),
+                        $('<td>').text(player.playerstats.matches),
+                        $('<td>').text(player.playerstats.wins),
+                        $('<td>').text(player.playerstats.draws),
+                        $('<td>').text(player.playerstats.losses),
                         $('<td>').append(editLink)
                     ));
                 }
@@ -349,16 +372,20 @@ function startApp() {
     }
 
     function addNewMatchView() {
+
         $('#formAddNewMatch').trigger('reset');
         showView('viewAddMatch');
-        loadPlayersInSelect();
-        autocomplete();
+        if ($("#teamOnePlayerSix").has('option').length == 0) {
+            loadPlayersInSelect();
+            autocomplete();
+        }
+        dateTimePicker();
     }
 
     function addNewMatch() {
 
         let match = {
-            "date": $("#matchDate").val(),
+            "date": $("#datetimepicker").val(),
             "team1": {
                 "name": $("#teamOneName").val(),
                 "result": $("#teamOneResult").val(),
@@ -447,6 +474,12 @@ function startApp() {
 
     }
 
+    function showSingleMatch(){
+        $('#showSingleMatch').empty();
+        showView('viewSingleMatch');
+
+    }
+
     function addNewPlayerView(){
 
         $('#formAddNewPlayer').trigger('reset');
@@ -458,15 +491,19 @@ function startApp() {
         let userData = {
             username: $("#addNewPlayerUsername").val(),
             playerstats: {
-                points: Number(1),
-                rank: Number(1000)
+                points: Number(0),
+                rank: Number(1000),
+                matches: Number(0),
+                wins: Number(0),
+                draws: Number(0),
+                losses: Number(0)
             },
             _acl:             {
                 "creator": "user_id_1",
                 "gr": true,
                 "gw": false,
-                "r": ["5874dc61ef097e580fd27fce"],
-                "w": ["5874dc61ef097e580fd27fce"],
+                "r": ["58b442530ca925073f345199"],
+                "w": ["58b442530ca925073f345199"],
                 "groups": {
                     "r": ["group_id_1", "group_id_5"],
                     "w": ["group_id_3", "group_id_4"]
@@ -486,10 +523,19 @@ function startApp() {
             $('#formAddNewPlayer').trigger('reset');
             showView('viewAddPlayer');
             showInfo('Успешна регистрация.');
+            loadPlayersInSelect();
         }
     }
 
     function loadPlayersInSelect(){
+
+        for(let i = $("#teamOnePlayerOne").has('option').length - 1 ; i >= 0 ; i--)
+        {
+            $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
+                "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).find('option')
+                .remove()
+                .end();
+        }
 
 
         $.ajax({
@@ -533,30 +579,9 @@ function startApp() {
         playersForUpdateTeam2.push(match.team2.player5);
         playersForUpdateTeam2.push(match.team2.player6);
 
-        function updatePlayer(){
-            for(let i = 0; i<6; i++){
-                playersForUpdateTeam1[i].playerstats.rank = Number(playersForUpdateTeam1[i].playerstats.rank) + Number(pointsTeamOne);
-                $.ajax({
-                    method: "PUT",
-                    url: kinveyBaseUrl + "user/" + kinveyAppKey +"/"+ playersForUpdateTeam1[i]._id,
-                    headers: getKinveyUserAuthHeaders(),
-                    data: playersForUpdateTeam1[i],
-                    success: console.log("success"),
-                    error: handleAjaxError
-                });
-            }
-            for(let i = 0; i<6; i++){
-                playersForUpdateTeam2[i].playerstats.rank = Number(playersForUpdateTeam2[i].playerstats.rank) + Number(pointsTeamTwo);
-                $.ajax({
-                    method: "PUT",
-                    url: kinveyBaseUrl + "user/" + kinveyAppKey +"/"+ playersForUpdateTeam2[i]._id,
-                    headers: getKinveyUserAuthHeaders(),
-                    data: playersForUpdateTeam2[i],
-                    success: console.log("success"),
-                    error: handleAjaxError
-                });
-            }
-        }
+
+
+
 
         let team1rank = Number(match.team1.player1.playerstats.rank)+
             Number(match.team1.player2.playerstats.rank)+
@@ -572,56 +597,181 @@ function startApp() {
             Number(match.team2.player5.playerstats.rank)+
             Number(match.team2.player6.playerstats.rank);
 
+
+
+
         let handicap = Math.round((Math.abs(team1rank - team2rank)/50));
 
         let goalDifference = Math.abs(match.team1.result - match.team2.result);
+        if (goalDifference > 5){
+            goalDifference = 5;
+        }
+        let coefficient = Math.abs(team1rank - team2rank);
+        if(coefficient > 200){
+            coefficient = 200;
+        }
+
+        let rankTeamOne = 0;
+        let rankTeamTwo = 0;
         let pointsTeamOne = 0;
         let pointsTeamTwo = 0;
+        let winsTeamOne = 0;
+        let winsTeamTwo = 0;
+        let drawsTeamOne = 0;
+        let drawsTeamTwo = 0;
+        let lossesTeamOne = 0;
+        let lossesTeamTwo = 0;
 
 
         if(team1rank > team2rank) {
-            if(match.team1.result > (match.team2.result + handicap)){
 
-                pointsTeamOne = 10 + goalDifference - handicap;
-                pointsTeamTwo = - 10 - goalDifference + handicap;
-                updatePlayer();
+            //checks only the handicapped result;
+            if(match.team1.result > (match.team2.result + handicap)){
+                rankTeamOne = 10 + goalDifference - handicap;
+                rankTeamTwo = - 10 - goalDifference + handicap;
             }
             else if((match.team1.result + handicap) < match.team2.result){
+                rankTeamOne = - 10 - goalDifference - handicap;
+                rankTeamTwo = 10 + goalDifference + handicap;
+            }
 
-                pointsTeamOne = - 10 - goalDifference - handicap;
-                pointsTeamTwo = 10 + goalDifference + handicap;
-                updatePlayer();
+            //checks the actual result;
+            if(match.team1.result > (match.team2.result )){
+                winsTeamOne = 1;
+                lossesTeamTwo = 1;
+                pointsTeamOne = (10+goalDifference)*100/(100+coefficient);
+                pointsTeamTwo = (5-goalDifference)*(100+coefficient)/100;
+            }
+            else if(match.team1.result < (match.team2.result)){
+                winsTeamTwo = 1;
+                lossesTeamOne = 1;
+                pointsTeamOne = (5-goalDifference)*100/(100+coefficient);
+                pointsTeamTwo = (10+goalDifference)*(100+coefficient)/100;
+            }
+
+            else if(match.team1.result == (match.team2.result)){
+                drawsTeamOne = 1;
+                drawsTeamTwo = 1;
+                pointsTeamOne = 5*100/(100+coefficient);
+                pointsTeamTwo = 5*(100+coefficient)/100;
             }
         }
         else if(team1rank < team2rank) {
-            if((match.team1.result + handicap) > match.team2.result){
 
-                pointsTeamOne = 10 + goalDifference + handicap;
-                pointsTeamTwo = - 10 - goalDifference - handicap;
-                updatePlayer();
+            //checks the handicapped result only;
+            if((match.team1.result + handicap) > match.team2.result){
+                rankTeamOne = 10 + goalDifference + handicap;
+                rankTeamTwo = - 10 - goalDifference - handicap;
             }
             else if((match.team1.result + handicap) < match.team2.result){
+                rankTeamOne = - 10 - goalDifference + handicap;
+                rankTeamTwo = 10 + goalDifference - handicap;
+            }
 
-                pointsTeamOne = - 10 - goalDifference + handicap;
-                pointsTeamTwo = 10 + goalDifference - handicap;
-                updatePlayer();
+            //checks the actual result;
+            if(match.team1.result > (match.team2.result )){
+                winsTeamOne = 1;
+                lossesTeamTwo = 1;
+                pointsTeamOne = (10+goalDifference)*(100+coefficient)/100;
+                pointsTeamTwo = (5-goalDifference)*100/(100+coefficient);
+            }
+            else if(match.team1.result < (match.team2.result)){
+                winsTeamTwo = 1;
+                lossesTeamOne = 1;
+                pointsTeamOne = (5-goalDifference)*(100+coefficient)/100;
+                pointsTeamTwo = (10+goalDifference)*100/(100+coefficient);
+            }
+
+            else if(match.team1.result == (match.team2.result)){
+                drawsTeamOne = 1;
+                drawsTeamTwo = 1;
+                pointsTeamOne = 5*(100+coefficient)/100;
+                pointsTeamTwo = 5*100/(100+coefficient);
             }
         }
         else if(team1rank == team2rank) {
             if(match.team1.result > match.team2.result){
-
-                pointsTeamOne = 10 + goalDifference;
-                pointsTeamTwo = - 10 - goalDifference;
-                updatePlayer();
+                rankTeamOne = 10 + goalDifference;
+                rankTeamTwo = - 10 - goalDifference;
             }
             else if(match.team1.result < match.team2.result){
+                rankTeamOne = - 10 - goalDifference;
+                rankTeamTwo = 10 + goalDifference;
+            }
 
-                pointsTeamOne = - 10 - goalDifference;
+            //checks the actual result;
+            if(match.team1.result > (match.team2.result )){
+                winsTeamOne = 1;
+                lossesTeamTwo = 1;
+                pointsTeamOne = 10 + goalDifference;
+                pointsTeamTwo = 5 - goalDifference;
+            }
+            else if(match.team1.result < (match.team2.result)){
+                winsTeamTwo = 1;
+                lossesTeamOne = 1;
+                pointsTeamOne = 5 - goalDifference;
                 pointsTeamTwo = 10 + goalDifference;
-                updatePlayer();
+            }
+
+            else if(match.team1.result == (match.team2.result)){
+                drawsTeamOne = 1;
+                drawsTeamTwo = 1;
+                pointsTeamOne = 5;
+                pointsTeamTwo = 5;
+            }
+        }
+
+        function updatePlayer(){
+            for(let i = 0; i<6; i++){
+                playersForUpdateTeam1[i].playerstats.rank = Number(playersForUpdateTeam1[i].playerstats.rank) + Number(rankTeamOne);
+                playersForUpdateTeam1[i].playerstats.points = Number(playersForUpdateTeam1[i].playerstats.points) + Number(Math.round(pointsTeamOne));
+                playersForUpdateTeam1[i].playerstats.matches = Number(playersForUpdateTeam1[i].playerstats.matches) + 1;
+                playersForUpdateTeam1[i].playerstats.wins = Number(playersForUpdateTeam1[i].playerstats.wins) + Number(winsTeamOne);
+                playersForUpdateTeam1[i].playerstats.draws = Number(playersForUpdateTeam1[i].playerstats.draws) + Number(drawsTeamOne);
+                playersForUpdateTeam1[i].playerstats.losses = Number(playersForUpdateTeam1[i].playerstats.losses) + Number(lossesTeamOne);
+                $.ajax({
+                    method: "PUT",
+                    url: kinveyBaseUrl + "user/" + kinveyAppKey +"/"+ playersForUpdateTeam1[i]._id,
+                    headers: getKinveyUserAuthHeaders(),
+                    data: playersForUpdateTeam1[i],
+                    success: console.log("success"),
+                    error: handleAjaxError
+                });
+            }
+            for(let i = 0; i<6; i++){
+                playersForUpdateTeam2[i].playerstats.rank = Number(playersForUpdateTeam2[i].playerstats.rank) + Number(rankTeamTwo);
+                playersForUpdateTeam2[i].playerstats.points = Number(playersForUpdateTeam2[i].playerstats.points) + Number(Math.round(pointsTeamTwo));
+                playersForUpdateTeam2[i].playerstats.matches = Number(playersForUpdateTeam2[i].playerstats.matches) + 1;
+                playersForUpdateTeam2[i].playerstats.wins = Number(playersForUpdateTeam2[i].playerstats.wins) + Number(winsTeamTwo);
+                playersForUpdateTeam2[i].playerstats.draws = Number(playersForUpdateTeam2[i].playerstats.draws) + Number(drawsTeamTwo);
+                playersForUpdateTeam2[i].playerstats.losses = Number(playersForUpdateTeam2[i].playerstats.losses) + Number(lossesTeamTwo);
+                $.ajax({
+                    method: "PUT",
+                    url: kinveyBaseUrl + "user/" + kinveyAppKey +"/"+ playersForUpdateTeam2[i]._id,
+                    headers: getKinveyUserAuthHeaders(),
+                    data: playersForUpdateTeam2[i],
+                    success: console.log("success"),
+                    error: handleAjaxError
+                });
             }
 
         }
+        updatePlayer();
+
+        match.team1.rank = Number(team1rank);
+        match.team2.rank = Number(team2rank);
+        match.team1.points = Number(pointsTeamOne);
+        match.team2.points = Number(pointsTeamTwo);
+
+        $.ajax({
+            method: "PUT",
+            url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches/"+match._id,
+            headers: getKinveyUserAuthHeaders(),
+            data: match,
+            success: console.log("success"),
+            error: handleAjaxError
+        });
+
     }
 
     function calculateRank(){
@@ -799,6 +949,142 @@ function startApp() {
                 source: loadPlayersInSelect()
             });
         } );
+    }
+
+    function dateTimePicker(){
+        $.datetimepicker.setLocale('en');
+
+        $('#datetimepicker_format').datetimepicker({value:'2015/04/15 05:03', format: $("#datetimepicker_format_value").val()});
+        console.log($('#datetimepicker_format').datetimepicker('getValue'));
+
+        $("#datetimepicker_format_change").on("click", function(e){
+            $("#datetimepicker_format").data('xdsoft_datetimepicker').setOptions({format: $("#datetimepicker_format_value").val()});
+        });
+        $("#datetimepicker_format_locale").on("change", function(e){
+            $.datetimepicker.setLocale($(e.currentTarget).val());
+        });
+
+        $('#datetimepicker').datetimepicker({
+            dayOfWeekStart : 1,
+            lang:'en',
+            disabledDates:['1986/01/08','1986/01/09','1986/01/10'],
+            startDate:	'1986/01/05'
+        });
+        $('#datetimepicker').datetimepicker({value:'2015/04/15 05:03',step:10});
+
+        $('.some_class').datetimepicker();
+
+        $('#default_datetimepicker').datetimepicker({
+            formatTime:'H:i',
+            formatDate:'d.m.Y',
+            //defaultDate:'8.12.1986', // it's my birthday
+            defaultDate:'+03.01.1970', // it's my birthday
+            defaultTime:'10:00',
+            timepickerScrollbar:false
+        });
+
+        $('#datetimepicker10').datetimepicker({
+            step:5,
+            inline:true
+        });
+        $('#datetimepicker_mask').datetimepicker({
+            mask:'9999/19/39 29:59'
+        });
+
+        $('#datetimepicker1').datetimepicker({
+            datepicker:false,
+            format:'H:i',
+            step:5
+        });
+        $('#datetimepicker2').datetimepicker({
+            yearOffset:222,
+            lang:'ch',
+            timepicker:false,
+            format:'d/m/Y',
+            formatDate:'Y/m/d',
+            minDate:'-1970/01/02', // yesterday is minimum date
+            maxDate:'+1970/01/02' // and tommorow is maximum date calendar
+        });
+        $('#datetimepicker3').datetimepicker({
+            inline:true
+        });
+        $('#datetimepicker4').datetimepicker();
+        $('#open').click(function(){
+            $('#datetimepicker4').datetimepicker('show');
+        });
+        $('#close').click(function(){
+            $('#datetimepicker4').datetimepicker('hide');
+        });
+        $('#reset').click(function(){
+            $('#datetimepicker4').datetimepicker('reset');
+        });
+        $('#datetimepicker5').datetimepicker({
+            datepicker:false,
+            allowTimes:['12:00','13:00','15:00','17:00','17:05','17:20','19:00','20:00'],
+            step:5
+        });
+        $('#datetimepicker6').datetimepicker();
+        $('#destroy').click(function(){
+            if( $('#datetimepicker6').data('xdsoft_datetimepicker') ){
+                $('#datetimepicker6').datetimepicker('destroy');
+                this.value = 'create';
+            }else{
+                $('#datetimepicker6').datetimepicker();
+                this.value = 'destroy';
+            }
+        });
+        var logic = function( currentDateTime ){
+            if (currentDateTime && currentDateTime.getDay() == 6){
+                this.setOptions({
+                    minTime:'11:00'
+                });
+            }else
+                this.setOptions({
+                    minTime:'8:00'
+                });
+        };
+        $('#datetimepicker7').datetimepicker({
+            onChangeDateTime:logic,
+            onShow:logic
+        });
+        $('#datetimepicker8').datetimepicker({
+            onGenerate:function( ct ){
+                $(this).find('.xdsoft_date')
+                    .toggleClass('xdsoft_disabled');
+            },
+            minDate:'-1970/01/2',
+            maxDate:'+1970/01/2',
+            timepicker:false
+        });
+        $('#datetimepicker9').datetimepicker({
+            onGenerate:function( ct ){
+                $(this).find('.xdsoft_date.xdsoft_weekend')
+                    .addClass('xdsoft_disabled');
+            },
+            weekends:['01.01.2014','02.01.2014','03.01.2014','04.01.2014','05.01.2014','06.01.2014'],
+            timepicker:false
+        });
+        var dateToDisable = new Date();
+        dateToDisable.setDate(dateToDisable.getDate() + 2);
+        $('#datetimepicker11').datetimepicker({
+            beforeShowDay: function(date) {
+                if (date.getMonth() == dateToDisable.getMonth() && date.getDate() == dateToDisable.getDate()) {
+                    return [false, ""]
+                }
+
+                return [true, ""];
+            }
+        });
+        $('#datetimepicker12').datetimepicker({
+            beforeShowDay: function(date) {
+                if (date.getMonth() == dateToDisable.getMonth() && date.getDate() == dateToDisable.getDate()) {
+                    return [true, "custom-date-style"];
+                }
+
+                return [true, ""];
+            }
+        });
+        $('#datetimepicker_dark').datetimepicker({theme:'dark'})
     }
 
 }
