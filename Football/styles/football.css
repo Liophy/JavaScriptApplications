@@ -114,5 +114,5 @@ footer {
     margin: 0;
     padding: 5px 10px;
 
-.table1 tr td { cursor: pointer; }
 }
+#listAllMatches tr td { cursor: pointer; }
