@@ -113,4 +113,6 @@ footer {
 .custom-combobox-input {
     margin: 0;
     padding: 5px 10px;
+
+.table1 tr td { cursor: pointer; }
 }

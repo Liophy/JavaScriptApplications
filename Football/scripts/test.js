@@ -166,7 +166,7 @@ let match = {
         "ect": "2017-02-27T13:31:10.155Z"
     }
 };
-let match2 ={
+let match2 = {
     "_id": "58b42a1e7115eaa110692477",
     "date": "2017/01/02 12:00",
     "team1": {
@@ -334,40 +334,35 @@ let match2 ={
     }
 };
 
+match2.team1.player1.playerstats.points = 17;
+match2.team1.name = "test";
+
+console.log(match2.team1.name)
+
 let playersForUpdateTeam1 = [];
 let playersForUpdateTeam2 = [];
 
-playersForUpdateTeam1.push(match.team1.player1);
-playersForUpdateTeam1.push(match.team1.player2);
-playersForUpdateTeam1.push(match.team1.player3);
-playersForUpdateTeam1.push(match.team1.player4);
-playersForUpdateTeam1.push(match.team1.player5);
-playersForUpdateTeam1.push(match.team1.player6);
+playersForUpdateTeam1.push(match2.team1.player1);
+playersForUpdateTeam1.push(match2.team1.player2);
+playersForUpdateTeam1.push(match2.team1.player3);
+playersForUpdateTeam1.push(match2.team1.player4);
+playersForUpdateTeam1.push(match2.team1.player5);
+playersForUpdateTeam1.push(match2.team1.player6);
 
-playersForUpdateTeam2.push(match.team2.player1);
-playersForUpdateTeam2.push(match.team2.player2);
-playersForUpdateTeam2.push(match.team2.player3);
-playersForUpdateTeam2.push(match.team2.player4);
-playersForUpdateTeam2.push(match.team2.player5);
-playersForUpdateTeam2.push(match.team2.player6);
+playersForUpdateTeam2.push(match2.team2.player1);
+playersForUpdateTeam2.push(match2.team2.player2);
+playersForUpdateTeam2.push(match2.team2.player3);
+playersForUpdateTeam2.push(match2.team2.player4);
+playersForUpdateTeam2.push(match2.team2.player5);
+playersForUpdateTeam2.push(match2.team2.player6);
 
 function updatePlayer(){
-    for(let i = 0; i<6; i++){
-        playersForUpdateTeam1[i].playerstats.rank = Number(playersForUpdateTeam1[i].playerstats.rank) + Number(rankTeamOne);
-        playersForUpdateTeam1[i].playerstats.points = Number(playersForUpdateTeam1[i].playerstats.points) + Number(Math.round(pointsTeamOne));
-        playersForUpdateTeam1[i].playerstats.matches = Number(playersForUpdateTeam1[i].playerstats.matches) + 1;
-        playersForUpdateTeam1[i].playerstats.wins = Number(playersForUpdateTeam1[i].playerstats.wins) + Number(winsTeamOne);
-        playersForUpdateTeam1[i].playerstats.draws = Number(playersForUpdateTeam1[i].playerstats.draws) + Number(drawsTeamOne);
-        playersForUpdateTeam1[i].playerstats.losses = Number(playersForUpdateTeam1[i].playerstats.losses) + Number(lossesTeamOne);
-    }
-    for(let i = 0; i<6; i++){
-        playersForUpdateTeam2[i].playerstats.rank = Number(playersForUpdateTeam2[i].playerstats.rank) + Number(rankTeamTwo);
-        playersForUpdateTeam2[i].playerstats.points = Number(playersForUpdateTeam2[i].playerstats.points) + Number(Math.round(pointsTeamTwo));
-        playersForUpdateTeam2[i].playerstats.matches = Number(playersForUpdateTeam2[i].playerstats.matches) + 1;
-        playersForUpdateTeam2[i].playerstats.wins = Number(playersForUpdateTeam2[i].playerstats.wins) + Number(winsTeamTwo);
-        playersForUpdateTeam2[i].playerstats.draws = Number(playersForUpdateTeam2[i].playerstats.draws) + Number(drawsTeamTwo);
-        playersForUpdateTeam2[i].playerstats.losses = Number(playersForUpdateTeam2[i].playerstats.losses) + Number(lossesTeamTwo);
-    }
+        match2.team2.player1.playerstats.rank = Number(match2.team2.player1.playerstats.rank) + Number(rankTeamOne);
+        match2.team2.player1.playerstats.points = Number(match2.team2.player1.playerstats.points) + Number(Math.round(pointsTeamOne));
+        match2.team2.player1.playerstats.matches = Number(match2.team2.player1.playerstats.matches) + 1;
+        match2.team2.player1.playerstats.wins = Number(match2.team2.player1.playerstats.wins) + Number(winsTeamOne);
+        match2.team2.player1.playerstats.draws = Number(match2.team2.player1.playerstats.draws) + Number(drawsTeamOne);
+        match2.team2.player1.playerstats.losses = Number(match2.team2.player1.playerstats.losses) + Number(lossesTeamOne);
 }
 
 
@@ -531,14 +526,16 @@ else if(team1rank == team2rank) {
         pointsTeamTwo = 5;
         updatePlayer();
     }
+    let debug = "";
 
 }
-console.log(match.team1.player1.playerstats.rank);
-console.log(match.team2.player1.playerstats.rank);
-console.log(match.team1.player1.playerstats.points);
-console.log(match.team2.player1.playerstats.points);
-console.log(match.team1.player1.playerstats.matches);
-console.log(match.team1.player1.playerstats.wins);
+
+console.log(rankTeamOne);
+console.log(pointsTeamOne);
+console.log(match2.team2.player1.playerstats.rank);
+console.log(match2.team2.player1.playerstats.points);
+console.log(match2.team2.player1.playerstats.matches);
+console.log(match2.team2.player1.playerstats.wins);
 
 match.team1.rank = Number(team1rank);
 match.team2.rank = Number(team2rank);
