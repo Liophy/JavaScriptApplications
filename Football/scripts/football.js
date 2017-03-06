@@ -28,13 +28,22 @@ function startApp() {
     $("#linkUserHomeAddMatch").click(addNewMatchView);
     $("#linkUserHomeAddPlayer").click(addNewPlayerView);
 
-    $("#infoBox, #errorBox").click(function() {
+    $("#linkUserHomeRecalculateMatches").click(reCalculateAllMatches);
+
+
+
+
+    $("#infoBox, #errorBox").click(function () {
         $(this).fadeOut();
     });
 
     $(document).on({
-        ajaxStart: function() { $("#loadingBox").show() },
-        ajaxStop: function() { $("#loadingBox").hide() }
+        ajaxStart: function () {
+            $("#loadingBox").show()
+        },
+        ajaxStop: function () {
+            $("#loadingBox").hide()
+        }
     });
 
     function showHideMenuLinks() {
@@ -60,14 +69,16 @@ function startApp() {
         }
     }
 
-    $("form").submit(function(e) { e.preventDefault() });
+    $("form").submit(function (e) {
+        e.preventDefault()
+    });
 
     function showView(viewName) {
         $('main > section').hide();
-        $('#'+viewName).show();
+        $('#' + viewName).show();
     }
 
-    function showHomeView(){
+    function showHomeView() {
         showView('viewAppHome');
     }
 
@@ -75,23 +86,23 @@ function startApp() {
         showView('viewUserHome');
     }
 
-    function showLoginView(){
+    function showLoginView() {
         showView('viewLogin');
         $('#formLogin').trigger('reset');
     }
 
-    function showRegisterView(){
+    function showRegisterView() {
         $('#formRegister').trigger('reset');
         showView('viewRegister');
     }
 
-    function getKinveyUserAuthHeaders(){
+    function getKinveyUserAuthHeaders() {
         return {
-            "Authorization" : "Kinvey "+ sessionStorage.getItem("authToken")
+            "Authorization": "Kinvey " + sessionStorage.getItem("authToken")
         }
     }
 
-    function loginUser(){
+    function loginUser() {
         let userData = {
             username: $("#loginUsername").val(),
             password: $("#loginPasswd").val(),
@@ -113,7 +124,7 @@ function startApp() {
         }
     }
 
-    function registerUser(event){
+    function registerUser(event) {
         event.preventDefault();
 
         let userData = {
@@ -142,7 +153,7 @@ function startApp() {
         }
     }
 
-    function saveAuthInSession(userInfo){
+    function saveAuthInSession(userInfo) {
         sessionStorage.setItem("username", userInfo.username);
         sessionStorage.setItem("name", userInfo.name);
         sessionStorage.setItem("authToken", userInfo._kmd.authtoken);
@@ -151,10 +162,10 @@ function startApp() {
         $("#viewUserHomeHeading").text("Welcome, " + userInfo.name);
     }
 
-    function logoutUser(){
-        return  $.ajax({
+    function logoutUser() {
+        return $.ajax({
             method: 'POST',
-            url: kinveyBaseUrl +"user/" + kinveyAppKey + "/_logout",
+            url: kinveyBaseUrl + "user/" + kinveyAppKey + "/_logout",
             headers: getKinveyUserAuthHeaders(),
             success: successLogout(),
             error: handleAjaxError
@@ -169,15 +180,15 @@ function startApp() {
         }
     }
 
-    function showInfo(message){
+    function showInfo(message) {
         $('#infoBox').text(message);
         $('#infoBox').show();
-        setTimeout(function() {
+        setTimeout(function () {
             $('#infoBox').fadeOut();
         }, 3000);
     }
 
-    function handleAjaxError(response){
+    function handleAjaxError(response) {
         let errorMsg = JSON.stringify(response);
         if (response.readyState === 0)
             errorMsg = "Cannot connect due to network error.";
@@ -187,7 +198,7 @@ function startApp() {
         showError(errorMsg);
     }
 
-    function showError(errorMsg){
+    function showError(errorMsg) {
         $('#errorBox').text("Error: " + errorMsg);
         $('#errorBox').show();
     }
@@ -204,16 +215,11 @@ function startApp() {
         });
 
 
-
         function loadMatchesSuccess(matches) {
 
-            function compare(a,b) {
-                a = new Date(a);
-                b = new Date(b);
-                return b-a;
-            }
-
-            matches.sort(compare);
+            matches.sort(function (a, b) {
+                return new Date(a.date) - new Date(b.date)
+            });
 
             $('#listAllMatches').empty();
             showInfo('Matches loaded.');
@@ -225,11 +231,11 @@ function startApp() {
             else {
                 let matchTable = $('<table>')
                     .append($('<tr>').append(
-                        '<th>N</th>'+
-                        '<th>Отбор 1</th>'+
-                        '<th></th>'+
-                        '<th></th>'+
-                        '<th>Отбор 2</th>'+
+                        '<th>N</th>' +
+                        '<th>Отбор 1</th>' +
+                        '<th></th>' +
+                        '<th></th>' +
+                        '<th>Отбор 2</th>' +
                         '<th>Дата</th>'
                     ));
                 let count = 1;
@@ -246,12 +252,12 @@ function startApp() {
 
 
                     matchTable.append($('<tr>').append(
-                        $('<td>').text(count).click(showSingleMatch.bind(this,match)),
-                        $('<td>').text(match.team1.name).click(showSingleMatch.bind(this,match)),
-                        $('<td>').text(match.team1.result).click(showSingleMatch.bind(this,match)),
-                        $('<td>').text(match.team2.result).click(showSingleMatch.bind(this,match)),
-                        $('<td>').text(match.team2.name).click(showSingleMatch.bind(this,match)),
-                        $('<td>').text(match.date).click(showSingleMatch.bind(this,match)),
+                        $('<td>').text(count).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.team1.name).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.team1.result).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.team2.result).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.team2.name).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.date).click(showSingleMatch.bind(this, match)),
                         $('<td>').append(editMatchLink)
                     ));
                     count++
@@ -264,7 +270,6 @@ function startApp() {
 
     function listAllPlayers() {
         showView('viewAllPlayers');
-        calculateRank();
 
         $.ajax({
             method: "GET",
@@ -276,13 +281,14 @@ function startApp() {
 
         function loadUsersSuccess(players) {
 
-            function compare(a,b) {
+            function compare(a, b) {
                 if (Number(a.playerstats.rank) < Number(b.playerstats.rank))
                     return 1;
                 if (Number(a.playerstats.rank) > Number(b.playerstats.rank))
                     return -1;
                 return 0;
             }
+
             players.sort(compare);
 
             showInfo('Players loaded');
@@ -290,41 +296,41 @@ function startApp() {
 
             let playersTable = $('<table>')
                 .append($('<tr>').append(
-                    '<th>N</th>'+
-                    '<th>Име</th>'+
-                    '<th>Ранг</th>'+
-                    '<th>Точки</th>'+
-                    '<th>Мачове</th>'+
-                    '<th>Победи</th>'+
-                    '<th>Равни</th>'+
+                    '<th>N</th>' +
+                    '<th>Име</th>' +
+                    '<th>Ранг</th>' +
+                    '<th>Точки</th>' +
+                    '<th>Мачове</th>' +
+                    '<th>Победи</th>' +
+                    '<th>Равни</th>' +
                     '<th>Загуби</th>'
-                    ));
+                ));
             $('#viewAllPlayers').append(playersTable);
             let count = 1;
 
 
-                for( let player of players) {
-                    appendPlayerRow(player, playersTable);
-                    count++;
-                }
+            for (let player of players) {
+                appendPlayerRow(player, playersTable);
+                count++;
+            }
 
-                function appendPlayerRow(player, playersTable) {
+            function appendPlayerRow(player, playersTable) {
 
 
-                    let editLink = $('<a href="#">[Edit]</a>').click(editPlayer.bind(this, player));
+                let editLink = $('<a href="#">[Edit]</a>').click(editPlayer.bind(this, player));
 
-                    playersTable.append($('<tr>').append(
-                        $('<td>').text(count),
-                        $('<td>').text(player.username),
-                        $('<td>').text(player.playerstats.rank),
-                        $('<td>').text(player.playerstats.points),
-                        $('<td>').text(player.playerstats.matches),
-                        $('<td>').text(player.playerstats.wins),
-                        $('<td>').text(player.playerstats.draws),
-                        $('<td>').text(player.playerstats.losses),
-                        $('<td>').append(editLink)
-                    ));
-                }
+                playersTable.append($('<tr>').append(
+                    $('<td>').text(count),
+                    $('<td>').text(player.username),
+                    $('<td>').text(player.playerstats.rank),
+                    $('<td>').text(player.playerstats.points),
+                    $('<td>').text(player.playerstats.matches),
+                    $('<td>').text(player.playerstats.wins),
+                    $('<td>').text(player.playerstats.draws),
+                    $('<td>').text(player.playerstats.losses),
+                    $('<td>').append(editLink)
+                ));
+            }
         }
     }
 
@@ -340,11 +346,11 @@ function startApp() {
             error: handleAjaxError
         });
 
-        function getUserItemsSuccess(object){
+        function getUserItemsSuccess(object) {
 
-            for( let item in object.cart) {
+            for (let item in object.cart) {
 
-                if(cartItem==item){
+                if (cartItem == item) {
                     delete object.cart[cartItem]
 
                     $.ajax({
@@ -375,8 +381,8 @@ function startApp() {
 
         $('#formAddNewMatch').trigger('reset');
         showView('viewAddMatch');
-            loadPlayersInSelect();
-            autocomplete();
+        loadPlayersInSelect();
+        autocomplete();
         dateTimePicker();
     }
 
@@ -454,25 +460,25 @@ function startApp() {
             }
         };
 
-        $.ajax({
-            method: "POST",
-            url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches",
-            headers: getKinveyUserAuthHeaders(),
-            data: match,
-            success: addMatchSuccess,
-            error: handleAjaxError
-        });
+        //$.ajax({
+        //    method: "POST",
+        //    url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches",
+        //    headers: getKinveyUserAuthHeaders(),
+        //    data: match,
+        //    success: addMatchSuccess,
+        //    error: handleAjaxError
+        //});
 
 
-        function addMatchSuccess(response) {
-            calculateMatch(response);
-            showHomeViewUser();
-            showInfo('Мачът е добавен успешно.');
-        }
+        //function addMatchSuccess(match) {
+        //}
+        calculateMatch(match);
+        showHomeViewUser();
+        showInfo('Мачът е добавен успешно.');
 
     }
 
-    function showSingleMatch(match){
+    function showSingleMatch(match) {
         $('#viewSingleMatch').empty();
         showView('viewSingleMatch');
 
@@ -537,13 +543,13 @@ function startApp() {
 
     }
 
-    function addNewPlayerView(){
+    function addNewPlayerView() {
 
         $('#formAddNewPlayer').trigger('reset');
         showView('viewAddPlayer');
     }
 
-    function addNewPlayer(){
+    function addNewPlayer() {
 
         let userData = {
             username: $("#addNewPlayerUsername").val(),
@@ -555,7 +561,7 @@ function startApp() {
                 draws: Number(0),
                 losses: Number(0)
             },
-            _acl:             {
+            _acl: {
                 "creator": "user_id_1",
                 "gr": true,
                 "gw": false,
@@ -584,12 +590,11 @@ function startApp() {
         }
     }
 
-    function loadPlayersInSelect(){
+    function loadPlayersInSelect() {
 
-        for(let i = $("#teamOnePlayerOne").has('option').length - 1 ; i >= 0 ; i--)
-        {
-            $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
-                "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).find('option')
+        for (let i = $("#teamOnePlayerOne").has('option').length - 1; i >= 0; i--) {
+            $("#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
+                "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix").find('option')
                 .remove()
                 .end();
         }
@@ -603,11 +608,11 @@ function startApp() {
             error: handleAjaxError
         });
 
-        function loadUsersSuccess(users){
+        function loadUsersSuccess(users) {
             for (let user of users) {
 
-                $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
-                    "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).append(
+                $("#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
+                    "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix").append(
                     $('<option>')
                         .text(user.username)
                         .val(user._id)
@@ -617,49 +622,31 @@ function startApp() {
         }
     }
 
-    function calculateMatch(match)  {
+    function calculateMatch(match) {
 
-        let playersForUpdateTeam1 = [];
-        let playersForUpdateTeam2 = [];
+        let team1rank = Number(match.team1.player1.playerstats.rank) +
+            Number(match.team1.player2.playerstats.rank) +
+            Number(match.team1.player3.playerstats.rank) +
+            Number(match.team1.player4.playerstats.rank) +
+            Number(match.team1.player5.playerstats.rank) +
+            Number(match.team1.player6.playerstats.rank);
 
-        playersForUpdateTeam1.push(match.team1.player1);
-        playersForUpdateTeam1.push(match.team1.player2);
-        playersForUpdateTeam1.push(match.team1.player3);
-        playersForUpdateTeam1.push(match.team1.player4);
-        playersForUpdateTeam1.push(match.team1.player5);
-        playersForUpdateTeam1.push(match.team1.player6);
-
-        playersForUpdateTeam2.push(match.team2.player1);
-        playersForUpdateTeam2.push(match.team2.player2);
-        playersForUpdateTeam2.push(match.team2.player3);
-        playersForUpdateTeam2.push(match.team2.player4);
-        playersForUpdateTeam2.push(match.team2.player5);
-        playersForUpdateTeam2.push(match.team2.player6);
+        let team2rank = Number(match.team2.player1.playerstats.rank) +
+            Number(match.team2.player2.playerstats.rank) +
+            Number(match.team2.player3.playerstats.rank) +
+            Number(match.team2.player4.playerstats.rank) +
+            Number(match.team2.player5.playerstats.rank) +
+            Number(match.team2.player6.playerstats.rank);
 
 
-        let team1rank = Number(match.team1.player1.playerstats.rank)+
-          Number(match.team1.player2.playerstats.rank)+
-          Number(match.team1.player3.playerstats.rank)+
-          Number(match.team1.player4.playerstats.rank)+
-          Number(match.team1.player5.playerstats.rank)+
-          Number(match.team1.player6.playerstats.rank);
-
-        let team2rank = Number(match.team2.player1.playerstats.rank)+
-           Number(match.team2.player2.playerstats.rank)+
-           Number(match.team2.player3.playerstats.rank)+
-           Number(match.team2.player4.playerstats.rank)+
-           Number(match.team2.player5.playerstats.rank)+
-           Number(match.team2.player6.playerstats.rank);
-
-
-        let handicap = Math.round((Math.abs(team1rank - team2rank)/50));
+        let handicap = Math.round((Math.abs(team1rank - team2rank) / 50));
 
         let goalDifference = Math.abs(match.team1.result - match.team2.result);
-        if (goalDifference > 5){
-            goalDifference = 5;
+        if (goalDifference > 10) {
+            goalDifference = 10;
         }
         let rankDifference = Math.abs(team1rank - team2rank);
-        if(rankDifference > 200){
+        if (rankDifference > 200) {
             rankDifference = 200;
         }
 
@@ -677,101 +664,101 @@ function startApp() {
         let coefficientTeamTwo = 0;
 
 
-        if(team1rank > team2rank) {
+        if (team1rank > team2rank) {
 
             //checks only the handicapped result;
-            if(Number(match.team1.result) > (Number(match.team2.result ) + handicap)){
+            if (Number(match.team1.result) > (Number(match.team2.result) + handicap)) {
                 rankTeamOne = 10 + goalDifference - handicap;
-                rankTeamTwo = - 10 - goalDifference + handicap;
+                rankTeamTwo = -10 - goalDifference + handicap;
             }
-            else if(Number(match.team1.result) < (Number(match.team2.result )+ handicap)){
-                rankTeamOne = - 10 - goalDifference - handicap;
+            else if (Number(match.team1.result) < (Number(match.team2.result) + handicap)) {
+                rankTeamOne = -10 - goalDifference - handicap;
                 rankTeamTwo = 10 + goalDifference + handicap;
             }
 
             //checks the actual result;
-            if(Number(match.team1.result) > Number(match.team2.result )){
+            if (Number(match.team1.result) > Number(match.team2.result)) {
                 winsTeamOne = 1;
                 lossesTeamTwo = 1;
-                coefficientTeamOne = 100/(100+rankDifference);
-                coefficientTeamTwo = (100+rankDifference)/100;
-                pointsTeamOne = (10+goalDifference)*coefficientTeamOne;
-                pointsTeamTwo = (5-goalDifference)*coefficientTeamTwo;
+                coefficientTeamOne = 100 / (100 + rankDifference);
+                coefficientTeamTwo = (100 + rankDifference) / 100;
+                pointsTeamOne = Math.round((10 + goalDifference) * coefficientTeamOne);
+                pointsTeamTwo = Math.round((5 - goalDifference) * coefficientTeamTwo);
                 updatePlayer();
             }
-            else if(Number(match.team1.result) < Number(match.team2.result)){
+            else if (Number(match.team1.result) < Number(match.team2.result)) {
                 winsTeamTwo = 1;
                 lossesTeamOne = 1;
-                coefficientTeamOne = 100/(100+rankDifference);
-                coefficientTeamTwo = (100+rankDifference)/100;
-                pointsTeamOne = (5-goalDifference)*coefficientTeamOne;
-                pointsTeamTwo = (10+goalDifference)*coefficientTeamTwo;
+                coefficientTeamOne = 100 / (100 + rankDifference);
+                coefficientTeamTwo = (100 + rankDifference) / 100;
+                pointsTeamOne = Math.round((5 - goalDifference) * coefficientTeamOne);
+                pointsTeamTwo = Math.round((10 + goalDifference) * coefficientTeamTwo);
                 updatePlayer();
             }
-            else if(Number(match.team1.result) == Number(match.team2.result)){
+            else if (Number(match.team1.result) == Number(match.team2.result)) {
                 drawsTeamOne = 1;
                 drawsTeamTwo = 1;
-                coefficientTeamOne = 100/(100+rankDifference);
-                coefficientTeamTwo = (100+rankDifference)/100;
-                pointsTeamOne = 5*coefficientTeamOne;
-                pointsTeamTwo = 5*coefficientTeamTwo;
+                coefficientTeamOne = 100 / (100 + rankDifference);
+                coefficientTeamTwo = (100 + rankDifference) / 100;
+                pointsTeamOne = Math.round(5 * coefficientTeamOne);
+                pointsTeamTwo = Math.round(5 * coefficientTeamTwo);
                 updatePlayer();
             }
         }
-        else if(team1rank < team2rank) {
+        else if (team1rank < team2rank) {
 
             //checks the handicapped result only;
-            if((Number(match.team1.result) + handicap) > Number(match.team2.result )){
+            if ((Number(match.team1.result) + handicap) > Number(match.team2.result)) {
                 rankTeamOne = 10 + goalDifference + handicap;
-                rankTeamTwo = - 10 - goalDifference - handicap;
+                rankTeamTwo = -10 - goalDifference - handicap;
             }
-            else if((Number(match.team1.result) + handicap) < Number(match.team2.result )){
-                rankTeamOne = - 10 - goalDifference + handicap;
+            else if ((Number(match.team1.result) + handicap) < Number(match.team2.result)) {
+                rankTeamOne = -10 - goalDifference + handicap;
                 rankTeamTwo = 10 + goalDifference - handicap;
             }
 
             //checks the actual result;
-            if(Number(match.team1.result) > Number(match.team2.result )){
+            if (Number(match.team1.result) > Number(match.team2.result)) {
                 winsTeamOne = 1;
                 lossesTeamTwo = 1;
-                coefficientTeamOne = (100+rankDifference)/100;
-                coefficientTeamTwo = 100/(100+rankDifference);
-                pointsTeamOne = (10+goalDifference)*coefficientTeamOne;
-                pointsTeamTwo = (5-goalDifference)*coefficientTeamTwo;
+                coefficientTeamOne = (100 + rankDifference) / 100;
+                coefficientTeamTwo = 100 / (100 + rankDifference);
+                pointsTeamOne = Math.round((10 + goalDifference) * coefficientTeamOne);
+                pointsTeamTwo = Math.round((5 - goalDifference) * coefficientTeamTwo);
                 updatePlayer();
             }
-            else if(Number(match.team1.result) < Number(match.team2.result)){
+            else if (Number(match.team1.result) < Number(match.team2.result)) {
                 winsTeamTwo = 1;
                 lossesTeamOne = 1;
-                coefficientTeamOne = (100+rankDifference)/100;
-                coefficientTeamTwo = 100/(100+rankDifference);
-                pointsTeamOne = (5-goalDifference)*coefficientTeamOne;
-                pointsTeamTwo = (10+goalDifference)*coefficientTeamTwo;
+                coefficientTeamOne = (100 + rankDifference) / 100;
+                coefficientTeamTwo = 100 / (100 + rankDifference);
+                pointsTeamOne = Math.round((5 - goalDifference) * coefficientTeamOne);
+                pointsTeamTwo = Math.round((10 + goalDifference) * coefficientTeamTwo);
                 updatePlayer();
             }
 
-            else if(Number(match.team1.result) == Number(match.team2.result)){
+            else if (Number(match.team1.result) == Number(match.team2.result)) {
                 drawsTeamOne = 1;
                 drawsTeamTwo = 1;
-                coefficientTeamOne = (100+rankDifference)/100;
-                coefficientTeamTwo = 100/(100+rankDifference);
-                pointsTeamOne = 5*coefficientTeamOne;
-                pointsTeamTwo = 5*coefficientTeamTwo;
+                coefficientTeamOne = (100 + rankDifference) / 100;
+                coefficientTeamTwo = 100 / (100 + rankDifference);
+                pointsTeamOne = Math.round(5 * coefficientTeamOne);
+                pointsTeamTwo = Math.round(5 * coefficientTeamTwo);
                 updatePlayer();
             }
         }
-        else if(team1rank == team2rank) {
-            if(Number(match.team1.result) > Number(match.team2.result )){
+        else if (team1rank == team2rank) {
+            if (Number(match.team1.result) > Number(match.team2.result)) {
                 rankTeamOne = 10 + goalDifference;
-                rankTeamTwo = - 10 - goalDifference;
+                rankTeamTwo = -10 - goalDifference;
             }
-            else if(Number(match.team1.result) < Number(match.team2.result )){
-                rankTeamOne = - 10 - goalDifference;
+            else if (Number(match.team1.result) < Number(match.team2.result)) {
+                rankTeamOne = -10 - goalDifference;
                 rankTeamTwo = 10 + goalDifference;
             }
 
             //checks the actual result;
-            if(Number(match.team1.result) > Number(match.team2.result )){
+            if (Number(match.team1.result) > Number(match.team2.result)) {
                 winsTeamOne = 1;
                 lossesTeamTwo = 1;
                 coefficientTeamOne = 1;
@@ -780,7 +767,7 @@ function startApp() {
                 pointsTeamTwo = 5 - goalDifference;
                 updatePlayer();
             }
-            else if(Number(match.team1.result) < Number(match.team2.result)){
+            else if (Number(match.team1.result) < Number(match.team2.result)) {
                 winsTeamTwo = 1;
                 lossesTeamOne = 1;
                 coefficientTeamOne = 1;
@@ -790,7 +777,7 @@ function startApp() {
                 updatePlayer();
             }
 
-            else if(Number(match.team1.result) == Number(match.team2.result)){
+            else if (Number(match.team1.result) == Number(match.team2.result)) {
                 drawsTeamOne = 1;
                 drawsTeamTwo = 1;
                 coefficientTeamOne = 1;
@@ -801,8 +788,26 @@ function startApp() {
             }
         }
 
-        function updatePlayer(){
-            for(let i = 0; i<6; i++){
+        function updatePlayer() {
+
+            let playersForUpdateTeam1 = [];
+            let playersForUpdateTeam2 = [];
+
+            playersForUpdateTeam1.push(match.team1.player1);
+            playersForUpdateTeam1.push(match.team1.player2);
+            playersForUpdateTeam1.push(match.team1.player3);
+            playersForUpdateTeam1.push(match.team1.player4);
+            playersForUpdateTeam1.push(match.team1.player5);
+            playersForUpdateTeam1.push(match.team1.player6);
+
+            playersForUpdateTeam2.push(match.team2.player1);
+            playersForUpdateTeam2.push(match.team2.player2);
+            playersForUpdateTeam2.push(match.team2.player3);
+            playersForUpdateTeam2.push(match.team2.player4);
+            playersForUpdateTeam2.push(match.team2.player5);
+            playersForUpdateTeam2.push(match.team2.player6);
+
+            for (let i = 0; i < 6; i++) {
 
                 playersForUpdateTeam1[i].playerstats.rank = Number(playersForUpdateTeam1[i].playerstats.rank) + Number(rankTeamOne);
                 playersForUpdateTeam1[i].playerstats.points = Number(playersForUpdateTeam1[i].playerstats.points) + Number(Math.round(pointsTeamOne));
@@ -812,14 +817,14 @@ function startApp() {
                 playersForUpdateTeam1[i].playerstats.losses = Number(playersForUpdateTeam1[i].playerstats.losses) + Number(lossesTeamOne);
                 $.ajax({
                     method: "PUT",
-                    url: kinveyBaseUrl + "user/" + kinveyAppKey +"/"+ playersForUpdateTeam1[i]._id,
+                    url: kinveyBaseUrl + "user/" + kinveyAppKey + "/" + playersForUpdateTeam1[i]._id,
                     headers: getKinveyUserAuthHeaders(),
                     data: playersForUpdateTeam1[i],
                     success: console.log("success"),
                     error: handleAjaxError
                 });
             }
-            for(let i = 0; i<6; i++){
+            for (let i = 0; i < 6; i++) {
                 playersForUpdateTeam2[i].playerstats.rank = Number(playersForUpdateTeam2[i].playerstats.rank) + Number(rankTeamTwo);
                 playersForUpdateTeam2[i].playerstats.points = Number(playersForUpdateTeam2[i].playerstats.points) + Number(Math.round(pointsTeamTwo));
                 playersForUpdateTeam2[i].playerstats.matches = Number(playersForUpdateTeam2[i].playerstats.matches) + 1;
@@ -828,7 +833,7 @@ function startApp() {
                 playersForUpdateTeam2[i].playerstats.losses = Number(playersForUpdateTeam2[i].playerstats.losses) + Number(lossesTeamTwo);
                 $.ajax({
                     method: "PUT",
-                    url: kinveyBaseUrl + "user/" + kinveyAppKey +"/"+ playersForUpdateTeam2[i]._id,
+                    url: kinveyBaseUrl + "user/" + kinveyAppKey + "/" + playersForUpdateTeam2[i]._id,
                     headers: getKinveyUserAuthHeaders(),
                     data: playersForUpdateTeam2[i],
                     success: console.log("success"),
@@ -837,6 +842,8 @@ function startApp() {
             }
 
         }
+
+
         console.log(rankDifference);
         console.log(handicap);
         console.log(typeof handicap);
@@ -855,8 +862,9 @@ function startApp() {
         console.log(match.team2.coefficient)
 
         $.ajax({
-            method: "PUT",
-            url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches/"+match._id,
+            method: "POST",
+            url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches",
+            //url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches/"+match._id,
             headers: getKinveyUserAuthHeaders(),
             data: match,
             success: console.log("success"),
@@ -865,152 +873,459 @@ function startApp() {
 
     }
 
-    function calculateRank(){
+    function reCalculateAllMatches() {
+
+        $.ajax({
+            method: "GET",
+            url: kinveyBaseUrl + "user/" + kinveyAppKey,
+            headers: getKinveyUserAuthHeaders(),
+            success: loadUsersSuccess,
+            error: handleAjaxError
+        });
+
+        let playersMap = new Map();
+
+        //reset stats off all players, starts everything from zero. Put them in map to operate the function into the memory, to avoid updating the kinvey after each match.
+        function loadUsersSuccess(players) {
+
+            for (let player of players) {
+
+                player.playerstats.rank = 1000;
+                player.playerstats.points = 0;
+                player.playerstats.matches = 0;
+                player.playerstats.wins = 0;
+                player.playerstats.draws = 0;
+                player.playerstats.losses = 0;
+
+                playersMap.set(player._id, player);
+            }
+            for (let[k,v] of playersMap){
+                //console.log(k + ' -> ' + v.playerstats.points);
+            }
+
+        }
+
+        $.ajax({
+            method: "GET",
+            url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches",
+            headers: getKinveyUserAuthHeaders(),
+            success: loadMatchesSuccess,
+            error: handleAjaxError
+        });
+
+        function loadMatchesSuccess(matches) {
+
+            matches.sort(function (a, b) {
+                return new Date(a.date) - new Date(b.date)
+            });
+
+            for (let match of matches) {
+                console.log(playersMap.get(match.team1.player1._id));
+
+                match.team1.player1 = playersMap.get(match.team1.player1._id);
+                match.team1.player2 = playersMap.get(match.team1.player2._id);
+                match.team1.player3 = playersMap.get(match.team1.player3._id);
+                match.team1.player4 = playersMap.get(match.team1.player4._id);
+                match.team1.player5 = playersMap.get(match.team1.player5._id);
+                match.team1.player6 = playersMap.get(match.team1.player6._id);
+
+                match.team2.player1 = playersMap.get(match.team2.player1._id);
+                match.team2.player2 = playersMap.get(match.team2.player2._id);
+                match.team2.player3 = playersMap.get(match.team2.player3._id);
+                match.team2.player4 = playersMap.get(match.team2.player4._id);
+                match.team2.player5 = playersMap.get(match.team2.player5._id);
+                match.team2.player6 = playersMap.get(match.team2.player6._id);
+
+
+                let team1rank = Number(match.team1.player1.playerstats.rank) +
+                    Number(match.team1.player2.playerstats.rank) +
+                    Number(match.team1.player3.playerstats.rank) +
+                    Number(match.team1.player4.playerstats.rank) +
+                    Number(match.team1.player5.playerstats.rank) +
+                    Number(match.team1.player6.playerstats.rank);
+
+                let team2rank = Number(match.team2.player1.playerstats.rank) +
+                    Number(match.team2.player2.playerstats.rank) +
+                    Number(match.team2.player3.playerstats.rank) +
+                    Number(match.team2.player4.playerstats.rank) +
+                    Number(match.team2.player5.playerstats.rank) +
+                    Number(match.team2.player6.playerstats.rank);
+
+
+                let handicap = Math.round((Math.abs(team1rank - team2rank) / 50));
+
+                let goalDifference = Math.abs(match.team1.result - match.team2.result);
+                if (goalDifference > 10) {
+                    goalDifference = 10;
+                }
+                let rankDifference = Math.abs(team1rank - team2rank);
+                if (rankDifference > 200) {
+                    rankDifference = 200;
+                }
+
+                let rankTeamOne = 0;
+                let rankTeamTwo = 0;
+                let pointsTeamOne = 0;
+                let pointsTeamTwo = 0;
+                let winsTeamOne = 0;
+                let winsTeamTwo = 0;
+                let drawsTeamOne = 0;
+                let drawsTeamTwo = 0;
+                let lossesTeamOne = 0;
+                let lossesTeamTwo = 0;
+                let coefficientTeamOne = 0;
+                let coefficientTeamTwo = 0;
+
+                function updatePlayersMap() {
+
+                    let playersForUpdateTeam1 = [];
+                    let playersForUpdateTeam2 = [];
+
+                    playersForUpdateTeam1.push(match.team1.player1);
+                    playersForUpdateTeam1.push(match.team1.player2);
+                    playersForUpdateTeam1.push(match.team1.player3);
+                    playersForUpdateTeam1.push(match.team1.player4);
+                    playersForUpdateTeam1.push(match.team1.player5);
+                    playersForUpdateTeam1.push(match.team1.player6);
+
+                    playersForUpdateTeam2.push(match.team2.player1);
+                    playersForUpdateTeam2.push(match.team2.player2);
+                    playersForUpdateTeam2.push(match.team2.player3);
+                    playersForUpdateTeam2.push(match.team2.player4);
+                    playersForUpdateTeam2.push(match.team2.player5);
+                    playersForUpdateTeam2.push(match.team2.player6);
+
+                    for (let i = 0; i < 6; i++) {
+                        playersForUpdateTeam1[i].playerstats.rank = Number(playersForUpdateTeam1[i].playerstats.rank) + Number(rankTeamOne);
+                        playersForUpdateTeam1[i].playerstats.points = Number(playersForUpdateTeam1[i].playerstats.points) + Number(Math.round(pointsTeamOne));
+                        playersForUpdateTeam1[i].playerstats.matches = Number(playersForUpdateTeam1[i].playerstats.matches) + 1;
+                        playersForUpdateTeam1[i].playerstats.wins = Number(playersForUpdateTeam1[i].playerstats.wins) + Number(winsTeamOne);
+                        playersForUpdateTeam1[i].playerstats.draws = Number(playersForUpdateTeam1[i].playerstats.draws) + Number(drawsTeamOne);
+                        playersForUpdateTeam1[i].playerstats.losses = Number(playersForUpdateTeam1[i].playerstats.losses) + Number(lossesTeamOne);
+
+                        playersMap.set(playersForUpdateTeam1[i]._id, playersForUpdateTeam1[i]);
+                    }
+
+                    for (let i = 0; i < 6; i++) {
+                        playersForUpdateTeam2[i].playerstats.rank = Number(playersForUpdateTeam2[i].playerstats.rank) + Number(rankTeamTwo);
+                        playersForUpdateTeam2[i].playerstats.points = Number(playersForUpdateTeam2[i].playerstats.points) + Number(Math.round(pointsTeamTwo));
+                        playersForUpdateTeam2[i].playerstats.matches = Number(playersForUpdateTeam2[i].playerstats.matches) + 1;
+                        playersForUpdateTeam2[i].playerstats.wins = Number(playersForUpdateTeam2[i].playerstats.wins) + Number(winsTeamTwo);
+                        playersForUpdateTeam2[i].playerstats.draws = Number(playersForUpdateTeam2[i].playerstats.draws) + Number(drawsTeamTwo);
+                        playersForUpdateTeam2[i].playerstats.losses = Number(playersForUpdateTeam2[i].playerstats.losses) + Number(lossesTeamTwo);
+
+                        playersMap.set(playersForUpdateTeam2[i]._id, playersForUpdateTeam2[i]);
+
+                    }
+                }
+
+
+                if (team1rank > team2rank) {
+
+                    //checks only the handicapped result;
+                    if (Number(match.team1.result) > (Number(match.team2.result) + handicap)) {
+                        rankTeamOne = 10 + goalDifference - handicap;
+                        rankTeamTwo = -10 - goalDifference + handicap;
+                    }
+                    else if (Number(match.team1.result) < (Number(match.team2.result) + handicap)) {
+                        rankTeamOne = -10 - goalDifference - handicap;
+                        rankTeamTwo = 10 + goalDifference + handicap;
+                    }
+
+                    //checks the actual result;
+                    if (Number(match.team1.result) > Number(match.team2.result)) {
+                        winsTeamOne = 1;
+                        lossesTeamTwo = 1;
+                        coefficientTeamOne = 100 / (100 + rankDifference);
+                        coefficientTeamTwo = (100 + rankDifference) / 100;
+                        pointsTeamOne = Math.round((10 + goalDifference) * coefficientTeamOne);
+                        pointsTeamTwo = Math.round((5 - goalDifference) * coefficientTeamTwo);
+                        updatePlayersMap();
+                    }
+                    else if (Number(match.team1.result) < Number(match.team2.result)) {
+                        winsTeamTwo = 1;
+                        lossesTeamOne = 1;
+                        coefficientTeamOne = 100 / (100 + rankDifference);
+                        coefficientTeamTwo = (100 + rankDifference) / 100;
+                        pointsTeamOne = Math.round((5 - goalDifference) * coefficientTeamOne);
+                        pointsTeamTwo = Math.round((10 + goalDifference) * coefficientTeamTwo);
+                        updatePlayersMap();
+                    }
+                    else if (Number(match.team1.result) == Number(match.team2.result)) {
+                        drawsTeamOne = 1;
+                        drawsTeamTwo = 1;
+                        coefficientTeamOne = 100 / (100 + rankDifference);
+                        coefficientTeamTwo = (100 + rankDifference) / 100;
+                        pointsTeamOne = Math.round(5 * coefficientTeamOne);
+                        pointsTeamTwo = Math.round(5 * coefficientTeamTwo);
+                        updatePlayersMap();
+                    }
+                }
+                else if (team1rank < team2rank) {
+
+                    //checks the handicapped result only;
+                    if ((Number(match.team1.result) + handicap) > Number(match.team2.result)) {
+                        rankTeamOne = 10 + goalDifference + handicap;
+                        rankTeamTwo = -10 - goalDifference - handicap;
+                    }
+                    else if ((Number(match.team1.result) + handicap) < Number(match.team2.result)) {
+                        rankTeamOne = -10 - goalDifference + handicap;
+                        rankTeamTwo = 10 + goalDifference - handicap;
+                    }
+
+                    //checks the actual result;
+                    if (Number(match.team1.result) > Number(match.team2.result)) {
+                        winsTeamOne = 1;
+                        lossesTeamTwo = 1;
+                        coefficientTeamOne = (100 + rankDifference) / 100;
+                        coefficientTeamTwo = 100 / (100 + rankDifference);
+                        pointsTeamOne = Math.round((10 + goalDifference) * coefficientTeamOne);
+                        pointsTeamTwo = Math.round((5 - goalDifference) * coefficientTeamTwo);
+                        updatePlayersMap();
+                    }
+                    else if (Number(match.team1.result) < Number(match.team2.result)) {
+                        winsTeamTwo = 1;
+                        lossesTeamOne = 1;
+                        coefficientTeamOne = (100 + rankDifference) / 100;
+                        coefficientTeamTwo = 100 / (100 + rankDifference);
+                        pointsTeamOne = Math.round((5 - goalDifference) * coefficientTeamOne);
+                        pointsTeamTwo = Math.round((10 + goalDifference) * coefficientTeamTwo);
+                        updatePlayersMap();
+                    }
+
+                    else if (Number(match.team1.result) == Number(match.team2.result)) {
+                        drawsTeamOne = 1;
+                        drawsTeamTwo = 1;
+                        coefficientTeamOne = (100 + rankDifference) / 100;
+                        coefficientTeamTwo = 100 / (100 + rankDifference);
+                        pointsTeamOne = Math.round(5 * coefficientTeamOne);
+                        pointsTeamTwo = Math.round(5 * coefficientTeamTwo);
+                        updatePlayersMap();
+                    }
+                }
+                else if (team1rank == team2rank) {
+                    if (Number(match.team1.result) > Number(match.team2.result)) {
+                        rankTeamOne = 10 + goalDifference;
+                        rankTeamTwo = -10 - goalDifference;
+                    }
+                    else if (Number(match.team1.result) < Number(match.team2.result)) {
+                        rankTeamOne = -10 - goalDifference;
+                        rankTeamTwo = 10 + goalDifference;
+                    }
+
+                    //checks the actual result;
+                    if (Number(match.team1.result) > Number(match.team2.result)) {
+                        winsTeamOne = 1;
+                        lossesTeamTwo = 1;
+                        coefficientTeamOne = 1;
+                        coefficientTeamTwo = 1;
+                        pointsTeamOne = 10 + goalDifference;
+                        pointsTeamTwo = 5 - goalDifference;
+                        updatePlayersMap();
+                    }
+                    else if (Number(match.team1.result) < Number(match.team2.result)) {
+                        winsTeamTwo = 1;
+                        lossesTeamOne = 1;
+                        coefficientTeamOne = 1;
+                        coefficientTeamTwo = 1;
+                        pointsTeamOne = 5 - goalDifference;
+                        pointsTeamTwo = 10 + goalDifference;
+                        updatePlayersMap();
+                    }
+
+                    else if (Number(match.team1.result) == Number(match.team2.result)) {
+                        drawsTeamOne = 1;
+                        drawsTeamTwo = 1;
+                        coefficientTeamOne = 1;
+                        coefficientTeamTwo = 1;
+                        pointsTeamOne = 5;
+                        pointsTeamTwo = 5;
+                        updatePlayersMap();
+                    }
+                }
+
+
+                match.team1.rank = Number(team1rank);
+                match.team2.rank = Number(team2rank);
+                match.team1.points = Number(pointsTeamOne);
+                match.team2.points = Number(pointsTeamTwo);
+                match.team1.coefficient = Number(coefficientTeamOne);
+                match.team2.coefficient = Number(coefficientTeamTwo);
+
+
+            }
+
+            //$.ajax({
+            //    method: "PUT",
+            //    url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches",
+            //    headers: getKinveyUserAuthHeaders(),
+            //    data: matches,
+            //    success: console.log("Matches updated successfull"),
+            //    error: handleAjaxError
+            //});
+        }
+
+        let updatedPlayers = [];
+
+        for (let player in playersMap){
+            console.log(player+" "+ playersMap[player]);
+        }
+
+
+       ////$.ajax({
+       //    method: "PUT",
+       //    url: kinveyBaseUrl + "user/" + kinveyAppKey,
+       //    headers: getKinveyUserAuthHeaders(),
+       //    data: updatedPlayers,
+       //    contentType: 'application/json',
+       //    success: console.log("Players updated successfull"),
+       //    error: handleAjaxError
+       //});
 
     }
 
     function autocomplete() {
 
-       $( function() {
-           $.widget( "custom.combobox", {
-               _create: function() {
-                   this.wrapper = $( "<span>" )
-                       .addClass( "custom-combobox" )
-                       .insertAfter( this.element );
+        $(function () {
+            $.widget("custom.combobox", {
+                _create: function () {
+                    this.wrapper = $("<span>")
+                        .addClass("custom-combobox")
+                        .insertAfter(this.element);
 
-                   this.element.hide();
-                   this._createAutocomplete();
-                   this._createShowAllButton();
-               },
+                    this.element.hide();
+                    this._createAutocomplete();
+                    this._createShowAllButton();
+                },
 
-               _createAutocomplete: function() {
-                   var selected = this.element.children( ":selected" ),
-                       value = selected.val() ? selected.text() : "";
+                _createAutocomplete: function () {
+                    var selected = this.element.children(":selected"),
+                        value = selected.val() ? selected.text() : "";
 
-                   this.input = $( "<input>" )
-                       .appendTo( this.wrapper )
-                       .val( value )
-                       .attr( "title", "" )
-                       .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left" )
-                       .autocomplete({
-                           delay: 0,
-                           minLength: 0,
-                           source: $.proxy( this, "_source" )
-                       })
-                       .tooltip({
-                           classes: {
-                               "ui-tooltip": "ui-state-highlight"
-                           }
-                       });
+                    this.input = $("<input>")
+                        .appendTo(this.wrapper)
+                        .val(value)
+                        .attr("title", "")
+                        .addClass("custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left")
+                        .autocomplete({
+                            delay: 0,
+                            minLength: 0,
+                            source: $.proxy(this, "_source")
+                        })
+                        .tooltip({
+                            classes: {
+                                "ui-tooltip": "ui-state-highlight"
+                            }
+                        });
 
-                   this._on( this.input, {
-                       autocompleteselect: function( event, ui ) {
-                           ui.item.option.selected = true;
-                           this._trigger( "select", event, {
-                               item: ui.item.option
-                           });
-                       },
+                    this._on(this.input, {
+                        autocompleteselect: function (event, ui) {
+                            ui.item.option.selected = true;
+                            this._trigger("select", event, {
+                                item: ui.item.option
+                            });
+                        },
 
-                       autocompletechange: "_removeIfInvalid"
-                   });
-               },
+                        autocompletechange: "_removeIfInvalid"
+                    });
+                },
 
-               _createShowAllButton: function() {
-                   var input = this.input,
-                       wasOpen = false;
+                _createShowAllButton: function () {
+                    var input = this.input,
+                        wasOpen = false;
 
-                   $( "<a>" )
-                       .attr( "tabIndex", -1 )
-                       .attr( "title", "Show All Items" )
-                       .tooltip()
-                       .appendTo( this.wrapper )
-                       .button({
-                           icons: {
-                               primary: "ui-icon-triangle-1-s"
-                           },
-                           text: false
-                       })
-                       .removeClass( "ui-corner-all" )
-                       .addClass( "custom-combobox-toggle ui-corner-right" )
-                       .on( "mousedown", function() {
-                           wasOpen = input.autocomplete( "widget" ).is( ":visible" );
-                       })
-                       .on( "click", function() {
-                           input.trigger( "focus" );
+                    $("<a>")
+                        .attr("tabIndex", -1)
+                        .attr("title", "Show All Items")
+                        .tooltip()
+                        .appendTo(this.wrapper)
+                        .button({
+                            icons: {
+                                primary: "ui-icon-triangle-1-s"
+                            },
+                            text: false
+                        })
+                        .removeClass("ui-corner-all")
+                        .addClass("custom-combobox-toggle ui-corner-right")
+                        .on("mousedown", function () {
+                            wasOpen = input.autocomplete("widget").is(":visible");
+                        })
+                        .on("click", function () {
+                            input.trigger("focus");
 
-                           // Close if already visible
-                           if ( wasOpen ) {
-                               return;
-                           }
+                            // Close if already visible
+                            if (wasOpen) {
+                                return;
+                            }
 
-                           // Pass empty string as value to search for, displaying all results
-                           input.autocomplete( "search", "" );
-                       });
-               },
+                            // Pass empty string as value to search for, displaying all results
+                            input.autocomplete("search", "");
+                        });
+                },
 
-               _source: function( request, response ) {
-                   var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
-                   response( this.element.children( "option" ).map(function() {
-                       var text = $( this ).text();
-                       if ( this.value && ( !request.term || matcher.test(text) ) )
-                           return {
-                               label: text,
-                               value: text,
-                               option: this
-                           };
-                   }) );
-               },
+                _source: function (request, response) {
+                    var matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+                    response(this.element.children("option").map(function () {
+                        var text = $(this).text();
+                        if (this.value && ( !request.term || matcher.test(text) ))
+                            return {
+                                label: text,
+                                value: text,
+                                option: this
+                            };
+                    }));
+                },
 
-               _removeIfInvalid: function( event, ui ) {
+                _removeIfInvalid: function (event, ui) {
 
-                   // Selected an item, nothing to do
-                   if ( ui.item ) {
-                       return;
-                   }
+                    // Selected an item, nothing to do
+                    if (ui.item) {
+                        return;
+                    }
 
-                   // Search for a match (case-insensitive)
-                   var value = this.input.val(),
-                       valueLowerCase = value.toLowerCase(),
-                       valid = false;
-                   this.element.children( "option" ).each(function() {
-                       if ( $( this ).text().toLowerCase() === valueLowerCase ) {
-                           this.selected = valid = true;
-                           return false;
-                       }
-                   });
+                    // Search for a match (case-insensitive)
+                    var value = this.input.val(),
+                        valueLowerCase = value.toLowerCase(),
+                        valid = false;
+                    this.element.children("option").each(function () {
+                        if ($(this).text().toLowerCase() === valueLowerCase) {
+                            this.selected = valid = true;
+                            return false;
+                        }
+                    });
 
-                   // Found a match, nothing to do
-                   if ( valid ) {
-                       return;
-                   }
+                    // Found a match, nothing to do
+                    if (valid) {
+                        return;
+                    }
 
-                   // Remove invalid value
-                   this.input
-                       .val( "" )
-                       .attr( "title", value + " didn't match any item" )
-                       .tooltip( "open" );
-                   this.element.val( "" );
-                   this._delay(function() {
-                       this.input.tooltip( "close" ).attr( "title", "" );
-                   }, 2500 );
-                   this.input.autocomplete( "instance" ).term = "";
-               },
+                    // Remove invalid value
+                    this.input
+                        .val("")
+                        .attr("title", value + " didn't match any item")
+                        .tooltip("open");
+                    this.element.val("");
+                    this._delay(function () {
+                        this.input.tooltip("close").attr("title", "");
+                    }, 2500);
+                    this.input.autocomplete("instance").term = "";
+                },
 
-               _destroy: function() {
-                   this.wrapper.remove();
-                   this.element.show();
-               }
-           });
+                _destroy: function () {
+                    this.wrapper.remove();
+                    this.element.show();
+                }
+            });
 
-           $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
-               "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).combobox();
+            $("#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
+                "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix").combobox();
 
-       } );
+        });
     }
 
-    function jQueryAutocomplete(){
+    function jQueryAutocomplete() {
 
-        $( function() {
+        $(function () {
             var availableTags = [
                 "ActionScript",
                 "AppleScript",
@@ -1035,130 +1350,133 @@ function startApp() {
                 "Scala",
                 "Scheme"
             ];
-            $( "#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
-                "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix" ).autocomplete({
+            $("#teamOnePlayerOne, #teamOnePlayerTwo, #teamOnePlayerThree, #teamOnePlayerFour, #teamOnePlayerFive, #teamOnePlayerSix, " +
+                "#teamTwoPlayerOne, #teamTwoPlayerTwo, #teamTwoPlayerThree, #teamTwoPlayerFour, #teamTwoPlayerFive, #teamTwoPlayerSix").autocomplete({
                 source: loadPlayersInSelect()
             });
-        } );
+        });
     }
 
-    function dateTimePicker(){
+    function dateTimePicker() {
         $.datetimepicker.setLocale('en');
 
-        $('#datetimepicker_format').datetimepicker({value:'2015/04/15 05:03', format: $("#datetimepicker_format_value").val()});
+        $('#datetimepicker_format').datetimepicker({
+            value: '2015/04/15 05:03',
+            format: $("#datetimepicker_format_value").val()
+        });
         console.log($('#datetimepicker_format').datetimepicker('getValue'));
 
-        $("#datetimepicker_format_change").on("click", function(e){
+        $("#datetimepicker_format_change").on("click", function (e) {
             $("#datetimepicker_format").data('xdsoft_datetimepicker').setOptions({format: $("#datetimepicker_format_value").val()});
         });
-        $("#datetimepicker_format_locale").on("change", function(e){
+        $("#datetimepicker_format_locale").on("change", function (e) {
             $.datetimepicker.setLocale($(e.currentTarget).val());
         });
 
         $('#datetimepicker').datetimepicker({
-            dayOfWeekStart : 1,
-            lang:'en',
-            disabledDates:['1986/01/08','1986/01/09','1986/01/10'],
-            startDate:	'1986/01/05'
+            dayOfWeekStart: 1,
+            lang: 'en',
+            disabledDates: ['1986/01/08', '1986/01/09', '1986/01/10'],
+            startDate: '1986/01/05'
         });
-        $('#datetimepicker').datetimepicker({value:'2015/04/15 05:03',step:10});
+        $('#datetimepicker').datetimepicker({value: '2015/04/15 05:03', step: 10});
 
         $('.some_class').datetimepicker();
 
         $('#default_datetimepicker').datetimepicker({
-            formatTime:'H:i',
-            formatDate:'d.m.Y',
+            formatTime: 'H:i',
+            formatDate: 'd.m.Y',
             //defaultDate:'8.12.1986', // it's my birthday
-            defaultDate:'+03.01.1970', // it's my birthday
-            defaultTime:'10:00',
-            timepickerScrollbar:false
+            defaultDate: '+03.01.1970', // it's my birthday
+            defaultTime: '10:00',
+            timepickerScrollbar: false
         });
 
         $('#datetimepicker10').datetimepicker({
-            step:5,
-            inline:true
+            step: 5,
+            inline: true
         });
         $('#datetimepicker_mask').datetimepicker({
-            mask:'9999/19/39 29:59'
+            mask: '9999/19/39 29:59'
         });
 
         $('#datetimepicker1').datetimepicker({
-            datepicker:false,
-            format:'H:i',
-            step:5
+            datepicker: false,
+            format: 'H:i',
+            step: 5
         });
         $('#datetimepicker2').datetimepicker({
-            yearOffset:222,
-            lang:'ch',
-            timepicker:false,
-            format:'d/m/Y',
-            formatDate:'Y/m/d',
-            minDate:'-1970/01/02', // yesterday is minimum date
-            maxDate:'+1970/01/02' // and tommorow is maximum date calendar
+            yearOffset: 222,
+            lang: 'ch',
+            timepicker: false,
+            format: 'd/m/Y',
+            formatDate: 'Y/m/d',
+            minDate: '-1970/01/02', // yesterday is minimum date
+            maxDate: '+1970/01/02' // and tommorow is maximum date calendar
         });
         $('#datetimepicker3').datetimepicker({
-            inline:true
+            inline: true
         });
         $('#datetimepicker4').datetimepicker();
-        $('#open').click(function(){
+        $('#open').click(function () {
             $('#datetimepicker4').datetimepicker('show');
         });
-        $('#close').click(function(){
+        $('#close').click(function () {
             $('#datetimepicker4').datetimepicker('hide');
         });
-        $('#reset').click(function(){
+        $('#reset').click(function () {
             $('#datetimepicker4').datetimepicker('reset');
         });
         $('#datetimepicker5').datetimepicker({
-            datepicker:false,
-            allowTimes:['12:00','13:00','15:00','17:00','17:05','17:20','19:00','20:00'],
-            step:5
+            datepicker: false,
+            allowTimes: ['12:00', '13:00', '15:00', '17:00', '17:05', '17:20', '19:00', '20:00'],
+            step: 5
         });
         $('#datetimepicker6').datetimepicker();
-        $('#destroy').click(function(){
-            if( $('#datetimepicker6').data('xdsoft_datetimepicker') ){
+        $('#destroy').click(function () {
+            if ($('#datetimepicker6').data('xdsoft_datetimepicker')) {
                 $('#datetimepicker6').datetimepicker('destroy');
                 this.value = 'create';
-            }else{
+            } else {
                 $('#datetimepicker6').datetimepicker();
                 this.value = 'destroy';
             }
         });
-        var logic = function( currentDateTime ){
-            if (currentDateTime && currentDateTime.getDay() == 6){
+        var logic = function (currentDateTime) {
+            if (currentDateTime && currentDateTime.getDay() == 6) {
                 this.setOptions({
-                    minTime:'11:00'
+                    minTime: '11:00'
                 });
-            }else
+            } else
                 this.setOptions({
-                    minTime:'8:00'
+                    minTime: '8:00'
                 });
         };
         $('#datetimepicker7').datetimepicker({
-            onChangeDateTime:logic,
-            onShow:logic
+            onChangeDateTime: logic,
+            onShow: logic
         });
         $('#datetimepicker8').datetimepicker({
-            onGenerate:function( ct ){
+            onGenerate: function (ct) {
                 $(this).find('.xdsoft_date')
                     .toggleClass('xdsoft_disabled');
             },
-            minDate:'-1970/01/2',
-            maxDate:'+1970/01/2',
-            timepicker:false
+            minDate: '-1970/01/2',
+            maxDate: '+1970/01/2',
+            timepicker: false
         });
         $('#datetimepicker9').datetimepicker({
-            onGenerate:function( ct ){
+            onGenerate: function (ct) {
                 $(this).find('.xdsoft_date.xdsoft_weekend')
                     .addClass('xdsoft_disabled');
             },
-            weekends:['01.01.2014','02.01.2014','03.01.2014','04.01.2014','05.01.2014','06.01.2014'],
-            timepicker:false
+            weekends: ['01.01.2014', '02.01.2014', '03.01.2014', '04.01.2014', '05.01.2014', '06.01.2014'],
+            timepicker: false
         });
         var dateToDisable = new Date();
         dateToDisable.setDate(dateToDisable.getDate() + 2);
         $('#datetimepicker11').datetimepicker({
-            beforeShowDay: function(date) {
+            beforeShowDay: function (date) {
                 if (date.getMonth() == dateToDisable.getMonth() && date.getDate() == dateToDisable.getDate()) {
                     return [false, ""]
                 }
@@ -1167,7 +1485,7 @@ function startApp() {
             }
         });
         $('#datetimepicker12').datetimepicker({
-            beforeShowDay: function(date) {
+            beforeShowDay: function (date) {
                 if (date.getMonth() == dateToDisable.getMonth() && date.getDate() == dateToDisable.getDate()) {
                     return [true, "custom-date-style"];
                 }
@@ -1175,7 +1493,7 @@ function startApp() {
                 return [true, ""];
             }
         });
-        $('#datetimepicker_dark').datetimepicker({theme:'dark'})
+        $('#datetimepicker_dark').datetimepicker({theme: 'dark'})
     }
 
 }
