@@ -31,8 +31,6 @@ function startApp() {
     $("#linkUserHomeRecalculateMatches").click(reCalculateAllMatches);
 
 
-
-
     $("#infoBox, #errorBox").click(function () {
         $(this).fadeOut();
     });
@@ -321,7 +319,7 @@ function startApp() {
 
                 playersTable.append($('<tr>').append(
                     $('<td>').text(count),
-                    $('<td>').text(player.username),
+                    $('<td>').text(player.username).click(showSinglePlayer.bind(this, player)),
                     $('<td>').text(player.playerstats.rank),
                     $('<td>').text(player.playerstats.points),
                     $('<td>').text(player.playerstats.matches),
@@ -507,40 +505,131 @@ function startApp() {
                 $('<th>').text("Точки"),
                 $('<th>').text("Играч")
             )).append($('<tr>').append(
-                $('<td>').text(match.team1.player1.username),
-                $('<td>').text(match.team1.points),
-                $('<td>').text(match.team2.points),
-                $('<td>').text(match.team2.player1.username)
+                $('<td>').text(match.team1.player1.username).click(showSinglePlayer.bind(this, match.team1.player1)),
+                $('<td>').text(match.team1.points).click(showSinglePlayer.bind(this, match.team1.player1)),
+                $('<td>').text(match.team2.points).click(showSinglePlayer.bind(this, match.team2.player1)),
+                $('<td>').text(match.team2.player1.username).click(showSinglePlayer.bind(this, match.team2.player1))
             )).append($('<tr>').append(
-                $('<td>').text(match.team1.player2.username),
-                $('<td>').text(match.team1.points),
-                $('<td>').text(match.team2.points),
-                $('<td>').text(match.team2.player2.username)
+                $('<td>').text(match.team1.player2.username).click(showSinglePlayer.bind(this, match.team1.player2)),
+                $('<td>').text(match.team1.points).click(showSinglePlayer.bind(this, match.team1.player2)),
+                $('<td>').text(match.team2.points).click(showSinglePlayer.bind(this, match.team2.player2)),
+                $('<td>').text(match.team2.player2.username).click(showSinglePlayer.bind(this, match.team2.player2))
             )).append($('<tr>').append(
-                $('<td>').text(match.team1.player3.username),
-                $('<td>').text(match.team1.points),
-                $('<td>').text(match.team2.points),
-                $('<td>').text(match.team2.player3.username)
+                $('<td>').text(match.team1.player3.username).click(showSinglePlayer.bind(this, match.team1.player3)),
+                $('<td>').text(match.team1.points).click(showSinglePlayer.bind(this, match.team1.player3)),
+                $('<td>').text(match.team2.points).click(showSinglePlayer.bind(this, match.team2.player3)),
+                $('<td>').text(match.team2.player3.username).click(showSinglePlayer.bind(this, match.team2.player3))
             )).append($('<tr>').append(
-                $('<td>').text(match.team1.player4.username),
-                $('<td>').text(match.team1.points),
-                $('<td>').text(match.team2.points),
-                $('<td>').text(match.team2.player4.username)
+                $('<td>').text(match.team1.player4.username).click(showSinglePlayer.bind(this, match.team1.player4)),
+                $('<td>').text(match.team1.points).click(showSinglePlayer.bind(this, match.team1.player4)),
+                $('<td>').text(match.team2.points).click(showSinglePlayer.bind(this, match.team2.player4)),
+                $('<td>').text(match.team2.player4.username).click(showSinglePlayer.bind(this, match.team2.player4))
             )).append($('<tr>').append(
-                $('<td>').text(match.team1.player5.username),
-                $('<td>').text(match.team1.points),
-                $('<td>').text(match.team2.points),
-                $('<td>').text(match.team2.player5.username)
+                $('<td>').text(match.team1.player5.username).click(showSinglePlayer.bind(this, match.team1.player5)),
+                $('<td>').text(match.team1.points).click(showSinglePlayer.bind(this, match.team1.player5)),
+                $('<td>').text(match.team2.points).click(showSinglePlayer.bind(this, match.team2.player5)),
+                $('<td>').text(match.team2.player5.username).click(showSinglePlayer.bind(this, match.team2.player5))
             )).append($('<tr>').append(
-                $('<td>').text(match.team1.player6.username),
-                $('<td>').text(match.team1.points),
-                $('<td>').text(match.team2.points),
-                $('<td>').text(match.team2.player6.username)
+                $('<td>').text(match.team1.player6.username).click(showSinglePlayer.bind(this, match.team1.player6)),
+                $('<td>').text(match.team1.points).click(showSinglePlayer.bind(this, match.team1.player6)),
+                $('<td>').text(match.team2.points).click(showSinglePlayer.bind(this, match.team2.player6)),
+                $('<td>').text(match.team2.player6.username).click(showSinglePlayer.bind(this, match.team2.player6))
             ));
 
         $('#viewSingleMatch').append(singleMatchTable).append(singleMatchPlayersTable);
 
 
+    }
+
+    function showSinglePlayer(player) {
+        $('#viewSinglePlayer').empty();
+        showView('viewSinglePlayer');
+
+        $.ajax({
+            method: "GET",
+            url: kinveyBaseUrl + "user/" + kinveyAppKey + "/" + player._id,
+            headers: getKinveyUserAuthHeaders(),
+            success: showSinglePlayerSuccess,
+            error: handleAjaxError
+        });
+
+        function showSinglePlayerSuccess(player) {
+            let singlePlayerTable = $('<table>')
+                .append($('<tr>')).append(
+                    $('<th>').text(player.username),
+                    $('<th>').text(player.playerstats.matches),
+                    $('<th>').text(player.playerstats.wins),
+                    $('<th>').text(player.playerstats.draws),
+                    $('<th>').text(player.playerstats.losses),
+                    $('<th>').text(player.playerstats.points)
+                )
+            $('#viewSinglePlayer').append(singlePlayerTable);
+        }
+
+            let queryMatchesForUser = `?query={"$or":[{"team1.player1._id":"${player._id}", 
+        "team1.player2._id":"${player._id}",
+        "team1.player3._id":"${player._id}",
+        "team1.player4._id":"${player._id}",
+        "team1.player5._id":"${player._id}",
+        "team1.player6._id":"${player._id}",
+        "team2.player1._id":"${player._id}",
+        "team2.player2._id":"${player._id}",
+        "team2.player3._id":"${player._id}",
+        "team2.player4._id":"${player._id}",
+        "team2.player5._id":"${player._id}",
+        "team2.player6._id":"${player._id}"}]}`;
+
+
+            console.log(queryMatchesForUser)
+
+            $.ajax({
+                method: "GET",
+                url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches" + queryMatchesForUser,
+                headers: getKinveyUserAuthHeaders(),
+                success: loadMatchesSuccess,
+                error: handleAjaxError
+            });
+
+
+            function loadMatchesSuccess(matches) {
+
+                matches.sort(function (a, b) {
+                    return new Date(a.date) - new Date(b.date)
+                });
+
+                let matchTable = $('<table>')
+                    .append($('<tr>').append(
+                        '<th>N</th>' +
+                        '<th>Отбор 1</th>' +
+                        '<th></th>' +
+                        '<th></th>' +
+                        '<th>Отбор 2</th>' +
+                        '<th>Дата</th>'
+                    ));
+                let count = 1;
+                for (let match of matches) {
+                    appendMatchRow(match, matchTable);
+                }
+
+                function appendMatchRow(match, matchTable) {
+
+                    let editMatchLink = $('<a href="#">[Edit]</a>').click(editMatch.bind(this, match));
+                    let showMatchLink = $('<a href="#"></a>').click(showSingleMatch.bind(this, match));
+
+
+                    matchTable.append($('<tr>').append(
+                        $('<td>').text(count).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.team1.name).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.team1.result).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.team2.result).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.team2.name).click(showSingleMatch.bind(this, match)),
+                        $('<td>').text(match.date).click(showSingleMatch.bind(this, match)),
+                        $('<td>').append(editMatchLink)
+                    ));
+                    count++
+                }
+                $('#viewSinglePlayer').append(matchTable);
+            }
     }
 
     function addNewPlayerView() {
@@ -899,8 +988,8 @@ function startApp() {
                 playersMap.set(player._id, player);
             }
 
-            for (let [k,v] of playersMap){
-               // console.log(k + ' -> ' + v.points);
+            for (let [k, v] of playersMap) {
+                // console.log(k + ' -> ' + v.points);
             }
 
             $.ajax({
@@ -917,7 +1006,7 @@ function startApp() {
                     return new Date(a.date) - new Date(b.date)
                 });
 
-                for (let match of matches){
+                for (let match of matches) {
 
                     match.team1.player1.playerstats = playersMap.get(match.team1.player1._id).playerstats;
                     match.team1.player2.playerstats = playersMap.get(match.team1.player2._id).playerstats;
@@ -1159,10 +1248,10 @@ function startApp() {
 
                 }
 
-                for (let match of matches){
+                for (let match of matches) {
                     $.ajax({
                         method: "PUT",
-                        url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches/"+ match._id,
+                        url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches/" + match._id,
                         headers: getKinveyUserAuthHeaders(),
                         data: match,
                         success: "",
@@ -1172,14 +1261,14 @@ function startApp() {
 
                 let updatedPlayers = [];
 
-                for (let [k,v] of playersMap){
+                for (let [k, v] of playersMap) {
                     updatedPlayers.push(v);
                 }
 
-                for (let player of updatedPlayers){
+                for (let player of updatedPlayers) {
                     $.ajax({
                         method: "PUT",
-                        url: kinveyBaseUrl + "user/" + kinveyAppKey+"/" + player._id,
+                        url: kinveyBaseUrl + "user/" + kinveyAppKey + "/" + player._id,
                         headers: getKinveyUserAuthHeaders(),
                         data: player,
                         success: "",
