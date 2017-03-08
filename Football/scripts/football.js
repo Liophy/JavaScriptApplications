@@ -256,7 +256,8 @@ function startApp() {
                         $('<td>').text(match.team2.result).click(showSingleMatch.bind(this, match)),
                         $('<td>').text(match.team2.name).click(showSingleMatch.bind(this, match)),
                         $('<td>').text(match.date).click(showSingleMatch.bind(this, match)),
-                        $('<td>').append(editMatchLink)
+                        $('<td>')
+                            //.append(editMatchLink)
                     ));
                     count++
                 }
@@ -326,7 +327,8 @@ function startApp() {
                     $('<td>').text(player.playerstats.wins),
                     $('<td>').text(player.playerstats.draws),
                     $('<td>').text(player.playerstats.losses),
-                    $('<td>').append(editLink)
+                    $('<td>')
+                        //.append(editLink)
                 ));
             }
         }
@@ -480,7 +482,7 @@ function startApp() {
     function showSingleMatch(match) {
         $('#showSingleMatch').empty();
         showView('viewSingleMatch');
-        console.log(match.video)
+
 
         let singleMatchTable = $('<table>')
             .append($('<tr>').append(
@@ -539,12 +541,11 @@ function startApp() {
             ));
 
         $('#showSingleMatch').append(singleMatchTable).append(singleMatchPlayersTable);
+
         loadYoutybe(match);
     }
 
-    function showSinglePlayer(player)
-
-    {
+    function showSinglePlayer(player) {
         $('#viewSinglePlayer').empty();
         showView('viewSinglePlayer');
 
@@ -559,35 +560,29 @@ function startApp() {
         function showSinglePlayerSuccess(player) {
             let singlePlayerTable = $('<table>')
                 .append($('<tr>')).append(
-                    $('<th>').text(player.username),
-                    $('<th>').text(player.playerstats.matches),
-                    $('<th>').text(player.playerstats.wins),
-                    $('<th>').text(player.playerstats.draws),
-                    $('<th>').text(player.playerstats.losses),
-                    $('<th>').text(player.playerstats.points)
+                    $('<th>').text("Играч"),
+                    $('<th>').text("Мачове"),
+                    $('<th>').text("Победи"),
+                    $('<th>').text("Равенства"),
+                    $('<th>').text("Загуби"),
+                    $('<th>').text("Точки")
+                )
+                .append($('<tr>')).append(
+                    $('<td>').text(player.username),
+                    $('<td>').text(player.playerstats.matches),
+                    $('<td>').text(player.playerstats.wins),
+                    $('<td>').text(player.playerstats.draws),
+                    $('<td>').text(player.playerstats.losses),
+                    $('<td>').text(player.playerstats.points)
                 )
             $('#viewSinglePlayer').append(singlePlayerTable);
         }
 
-            let queryMatchesForUser = `?query={"$or":[{"team1.player1._id":"${player._id}", 
-        "team1.player2._id":"${player._id}",
-        "team1.player3._id":"${player._id}",
-        "team1.player4._id":"${player._id}",
-        "team1.player5._id":"${player._id}",
-        "team1.player6._id":"${player._id}",
-        "team2.player1._id":"${player._id}",
-        "team2.player2._id":"${player._id}",
-        "team2.player3._id":"${player._id}",
-        "team2.player4._id":"${player._id}",
-        "team2.player5._id":"${player._id}",
-        "team2.player6._id":"${player._id}"}]}`;
 
-
-            console.log(queryMatchesForUser)
 
             $.ajax({
                 method: "GET",
-                url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches" + queryMatchesForUser,
+                url: kinveyBaseUrl + "appdata/" + kinveyAppKey + "/matches",
                 headers: getKinveyUserAuthHeaders(),
                 success: loadMatchesSuccess,
                 error: handleAjaxError
@@ -600,6 +595,25 @@ function startApp() {
                     return new Date(a.date) - new Date(b.date)
                 });
 
+                let playersMatches = []
+
+                for (match of matches){
+                    if(match.team1.player1._id==player._id ||
+                        match.team1.player2._id==player._id ||
+                        match.team1.player3._id==player._id ||
+                        match.team1.player4._id==player._id ||
+                        match.team1.player5._id==player._id ||
+                        match.team1.player6._id==player._id ||
+                        match.team2.player1._id==player._id ||
+                        match.team2.player2._id==player._id ||
+                        match.team2.player3._id==player._id ||
+                        match.team2.player4._id==player._id ||
+                        match.team2.player5._id==player._id ||
+                        match.team2.player6._id==player._id
+                    )
+                    playersMatches.push(match)
+                }
+
                 let matchTable = $('<table>')
                     .append($('<tr>').append(
                         '<th>N</th>' +
@@ -610,7 +624,7 @@ function startApp() {
                         '<th>Дата</th>'
                     ));
                 let count = 1;
-                for (let match of matches) {
+                for (let match of playersMatches) {
                     appendMatchRow(match, matchTable);
                 }
 
@@ -627,7 +641,8 @@ function startApp() {
                         $('<td>').text(match.team2.result).click(showSingleMatch.bind(this, match)),
                         $('<td>').text(match.team2.name).click(showSingleMatch.bind(this, match)),
                         $('<td>').text(match.date).click(showSingleMatch.bind(this, match)),
-                        $('<td>').append(editMatchLink)
+                        $('<td>')
+                            //.append(editMatchLink)
                     ));
                     count++
                 }
@@ -1283,29 +1298,34 @@ function startApp() {
     }
 
     function loadYoutybe(match) {
-        var player;
+        console.log(match.video)
+
+        // 2. This code loads the IFrame Player API code asynchronously.
+
+
+        // 3. This function creates an <iframe> (and YouTube player)
+        //    after the API code downloads.
         function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
+            let player = new YT.Player('player', {
                 height: '390',
                 width: '640',
-                videoId: match.video,
+                videoId: 'wvfbPtnLL6k',
                 events: {
                     'onReady': onPlayerReady,
                     'onStateChange': onPlayerStateChange
                 }
             });
-
+            console.log("onYouTubeIframeAPIReady")
         }
 
-
-// 4. The API will call this function when the video player is ready.
+        // 4. The API will call this function when the video player is ready.
         function onPlayerReady(event) {
             event.target.playVideo();
         }
 
-// 5. The API calls this function when the player's state changes.
-//    The function indicates that when playing a video (state=1),
-//    the player should play for six seconds and then stop.
+        // 5. The API calls this function when the player's state changes.
+        //    The function indicates that when playing a video (state=1),
+        //    the player should play for six seconds and then stop.
         var done = false;
         function onPlayerStateChange(event) {
             if (event.data == YT.PlayerState.PLAYING && !done) {
