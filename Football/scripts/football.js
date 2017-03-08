@@ -388,6 +388,7 @@ function startApp() {
 
         let match = {
             "date": $("#datetimepicker").val(),
+            "video": $("#video").val(),
             "team1": {
                 "name": $("#teamOneName").val(),
                 "result": $("#teamOneResult").val(),
@@ -477,8 +478,9 @@ function startApp() {
     }
 
     function showSingleMatch(match) {
-        $('#viewSingleMatch').empty();
+        $('#showSingleMatch').empty();
         showView('viewSingleMatch');
+        console.log(match.video)
 
         let singleMatchTable = $('<table>')
             .append($('<tr>').append(
@@ -536,12 +538,13 @@ function startApp() {
                 $('<td>').text(match.team2.player6.username).click(showSinglePlayer.bind(this, match.team2.player6))
             ));
 
-        $('#viewSingleMatch').append(singleMatchTable).append(singleMatchPlayersTable);
-
-
+        $('#showSingleMatch').append(singleMatchTable).append(singleMatchPlayersTable);
+        loadYoutybe(match);
     }
 
-    function showSinglePlayer(player) {
+    function showSinglePlayer(player)
+
+    {
         $('#viewSinglePlayer').empty();
         showView('viewSinglePlayer');
 
@@ -1277,6 +1280,43 @@ function startApp() {
                 }
             }
         }
+    }
+
+    function loadYoutybe(match) {
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '390',
+                width: '640',
+                videoId: match.video,
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+
+        }
+
+
+// 4. The API will call this function when the video player is ready.
+        function onPlayerReady(event) {
+            event.target.playVideo();
+        }
+
+// 5. The API calls this function when the player's state changes.
+//    The function indicates that when playing a video (state=1),
+//    the player should play for six seconds and then stop.
+        var done = false;
+        function onPlayerStateChange(event) {
+            if (event.data == YT.PlayerState.PLAYING && !done) {
+                setTimeout(stopVideo, 0);
+                done = true;
+            }
+        }
+        function stopVideo() {
+            player.stopVideo();
+        }
+
     }
 
     function autocomplete() {
