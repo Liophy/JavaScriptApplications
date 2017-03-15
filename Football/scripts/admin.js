@@ -642,6 +642,7 @@ function startApp() {
                         '<th>Дата</th>'
                     ));
                 let count = 1;
+                let outcome = "";
                 for (let match of playersMatches) {
                     appendMatchRow(match, matchTable);
                 }
@@ -651,6 +652,38 @@ function startApp() {
                     //let editMatchLink = $('<a href="#">[Edit]</a>').click(editMatch.bind(this, match));
                     let showMatchLink = $('<a href="#"></a>').click(showSingleMatch.bind(this, match));
 
+                    if(match.team1.player1._id==player._id ||
+                        match.team1.player2._id==player._id ||
+                        match.team1.player3._id==player._id ||
+                        match.team1.player4._id==player._id ||
+                        match.team1.player5._id==player._id ||
+                        match.team1.player6._id==player._id){
+                        if(Number(match.team1.result) > Number(match.team2.result)){
+                            outcome = "Победа"
+                        }
+                        else if (Number(match.team1.result) == Number(match.team2.result)){
+                            outcome = "Равенство"
+                        }
+
+                        else if(Number(match.team1.result) < Number(match.team2.result)){
+                            outcome = "Загуба"
+                        }
+
+                    }
+                    else {
+                        if(Number(match.team1.result) > Number(match.team2.result)){
+                            outcome = "Загуба"
+                        }
+                        else if (Number(match.team1.result) == Number(match.team2.result)){
+                            outcome = "Равенство"
+                        }
+
+                        else if(Number(match.team1.result) < Number(match.team2.result)){
+                            outcome = "Победа"
+                        }
+
+                    }
+
 
                     matchTable.append($('<tr>').append(
                         $('<td>').text(count).click(showSingleMatch.bind(this, match)),
@@ -659,9 +692,11 @@ function startApp() {
                         $('<td>').text(match.team2.result).click(showSingleMatch.bind(this, match)),
                         $('<td>').text(match.team2.name).click(showSingleMatch.bind(this, match)),
                         $('<td>').text(match.date).click(showSingleMatch.bind(this, match)),
-                        $('<td>')
+                        $('<td>').text(outcome).click(showSingleMatch.bind(this, match))
+
                             //.append(editMatchLink)
                     ));
+
                     count++
                 }
                 $('#viewSinglePlayer').append(matchTable);
@@ -764,7 +799,7 @@ function startApp() {
             Number(match.team2.player6.playerstats.rank);
 
 
-        let handicap = Math.round((Math.abs(team1rank - team2rank) / 50));
+        let handicap = Math.round((Math.abs(team1rank - team2rank)) / 50);
 
         let goalDifference = Math.abs(match.team1.result - match.team2.result);
         if (goalDifference > 5) {
